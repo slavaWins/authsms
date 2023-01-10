@@ -16,13 +16,8 @@
     </script>
 @endsection
 
-@section('content')
+@section('content_auth')
 
-    <style>
-        .inp_code input {
-            text-align: center;
-        }
-    </style>
 
     <form method="POST" action="{{ route('auth.code.send', $phonevertify) }}" id="formMain">
         @csrf
@@ -37,7 +32,7 @@
 
         @include('authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXX'])
 
-        <button type="submit" class="mt-4 btn btn-primary col-12 p-3 shadow-0">
+        <button type="submit" class="mt-4 btn btn-primary col-12 p-3 shadow-0 btn-submit-auth">
             Отправить
         </button>
 

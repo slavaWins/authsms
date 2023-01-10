@@ -19,8 +19,10 @@
                     background-size: cover;
                 }
 
-
-                .btn-round-back {
+                .btn-submit-auth {
+                    border-radius: 33px;
+                }
+                .btn-round-back-auth {
                     height: 40px;
                     width: 40px;
                     background: #fff;
@@ -30,12 +32,40 @@
                     text-align: center;
                     color: #000;
                     font-size: 18px;
-                    font-weight: 400;
-                    padding-top: 6px;
+                    padding-top: 5px;
                     border: 1px solid #fff;
                     position: absolute;
                     left: -20px;
                     cursor: pointer;
+                    font-weight: 500;
+                    text-decoration: none;
+                }
+
+                .inp_phone_auth ._messageBottom{
+                    font-size: 12px; color: #ff2f00;
+                }
+                .inp_phone_auth{
+                    border: 1px solid #222;
+                    border-radius: 12px;
+                    padding: 6px;
+                }
+                .inpNumberReal {
+                    border: none;
+                    padding: 0px;
+                }
+
+                .inpFont {
+                    font-weight: 500;
+                    font-size: 24px;
+                }
+
+                .inpNumberReal:focus {
+                    outline: none !important;
+                    border: none !important;
+                }
+
+                .inp_code input {
+                    text-align: center;
                 }
             </style>
 
@@ -55,7 +85,7 @@
                                 </div>
                             @endif
 
-                            <a class="btn-round-back">
+                            <a class="btn-round-back-auth">
                                 <
                             </a>
 
@@ -64,7 +94,7 @@
                                 <img src="/img/Logo.svg" height="28" loading="lazy">
                             </a>
 
-                            @yield('content')
+                            @yield('content_auth')
 
                         </div>
                     </div>
