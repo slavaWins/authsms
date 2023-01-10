@@ -1,7 +1,7 @@
 <?php
     namespace SlavaWins\AuthSms\Http\Controllers;
 
-
+    use App\Actions\AuthSms\CreateNewUser;
     use Barryvdh\Debugbar\Controllers\BaseController;
     use Carbon\Carbon;
     use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -45,10 +45,9 @@
             $user = User::where("phone", $phonevertify->phone)->first();
 
             if (!$user) {
-                $user = new User();
+                $user =  CreateNewUser::create();
                 $user->phone = $phonevertify->phone;
                 $user->save();
-                NotifyBallController::SendToUid($user->id, "Спасибо за регистрацию! Обязательно заполните свой профиль!", route('profile'));
             }
 
             Auth::login($user);
@@ -120,9 +119,8 @@
             return view("authsms.phone-code", compact(['phone_draw', 'phone', 'tryId', 'phonevertify']));
         }
 
+        
         public function index() {
-
-
             return view("authsms.phone");
         }
 

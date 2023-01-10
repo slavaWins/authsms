@@ -34,13 +34,16 @@ class AuthSmsServiceProvider extends ServiceProvider
             __DIR__.'/../../img' => public_path('img/authsms'),
         ], 'public');
 
-
         $this->publishes([
             __DIR__.'/../database/migrations' =>  database_path('migrations'),
         ], 'public');
 
         $this->publishes([
             __DIR__.'/../resources/views' =>  resource_path('views'),
+        ], 'public');
+
+        $this->publishes([
+            __DIR__.'/../Actions' =>  app_path('Actions'),
         ], 'public');
     }
 }
