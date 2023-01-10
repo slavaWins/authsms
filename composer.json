@@ -1,0 +1,28 @@
+{
+    "name": "slavawins/authsms",
+    "description": "Expa",
+    "minimum-stability": "stable",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "slavaWins",
+            "email": "email@example.com",
+            "homepage": "https://github.com/slavaWins/authsms"
+        }
+    ],
+    "require": {
+        "php": "^7.3|^8.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "SlavaWins\\AuthSms\\Providers\\AuthSmsServiceProvider"
+            ]
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "SlavaWins\\AuthSms\\": "src"
+        }
+    }
+}
