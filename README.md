@@ -32,7 +32,7 @@ AUTHSMS_SMSRU_API_KEY=xxx
 
 
 
-3) В роутере routes/web.php удалить:
+4) В роутере routes/web.php удалить:
  ```
     Auth::routes();
  ``` 
@@ -43,10 +43,18 @@ AUTHSMS_SMSRU_API_KEY=xxx
 
 
 
-3) Подключить js файлы в любом удобном месте. Можно просто в app.blade.php
+5) Выполнить миграцию
  ```
-    <script src="{{ asset('js/authsms/XXX.js') }}"></script> 
+    php artisan migrate 
  ``` 
 
+
+6) В папке resources\views\authsms\layout.blade.php  нужно указать ваш layout который вы используете.
+И заменить app-col на "content". Вообщем нужно сделать так как оно должно работать у вас.
+ ```
+  @extends('layouts.app')
+  
+  @section('app-col')
+ ``` 
 
  

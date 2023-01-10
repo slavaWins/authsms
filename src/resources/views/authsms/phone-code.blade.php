@@ -35,7 +35,7 @@
             Отправленный на номер {{$phone_draw}}
         </small>
 
-        @include('components.input-phone', ['ind'=>'code','placeholder'=>'XXXX'])
+        @include('authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXX'])
 
         <button type="submit" class="mt-4 btn btn-primary col-12 p-3 shadow-0">
             Отправить

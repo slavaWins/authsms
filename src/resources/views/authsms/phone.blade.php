@@ -34,7 +34,7 @@
             Введите номер телефона
         </p>
 
-        @include('components.input-phone', ['ind'=>'phone', 'prefix'=>"+7",'placeholder'=>'(999) 000-00-00'])
+        @include('authsms.input-phone', ['ind'=>'phone', 'prefix'=>"+7",'placeholder'=>'(999) 000-00-00'])
 
 
         <button type="submit" class="mt-4 btn btn-primary col-12 p-3 shadow-0">

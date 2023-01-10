@@ -15,7 +15,7 @@
                 }
 
                 body {
-                    background: url("/img/backmain.jpg") center;
+                    background: url("/img/authsms/background.jpg") center;
                     background-size: cover;
                 }
 
