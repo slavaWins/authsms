@@ -36,7 +36,7 @@ class AuthSmsServiceProvider extends ServiceProvider
 
 
         $this->publishes([
-            __DIR__.'/../database/migrations' =>  database_path('migrations/authsms'),
+            __DIR__.'/../database/migrations' =>  database_path('migrations'),
         ], 'public');
 
         $this->publishes([

@@ -1,7 +1,7 @@
 <?php
     namespace SlavaWins\AuthSms\Http\Controllers;
 
-    use App\Models\PhoneVertify;
+
     use Barryvdh\Debugbar\Controllers\BaseController;
     use Carbon\Carbon;
     use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -12,6 +12,7 @@
     use App\Models\User;
     use Illuminate\Support\Facades\Auth;
     use SlavaWins\AuthSms\Library\Formater;
+    use SlavaWins\AuthSms\Models\PhoneVertify;
 
     class AuthSmsController extends BaseController
     {
