@@ -58,3 +58,5 @@ AUTHSMS_SMSRU_API_KEY=xxx
  ``` 
 
  
+7) Пользователь создается в экшен классе app\Actions\AuthSms\CreateNewUser.php
+Там вы можете указать кастомные поля, и напримере если у вас что-то не может быть nullable и не имеет defualt value. 
