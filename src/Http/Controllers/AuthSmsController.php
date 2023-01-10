@@ -2,11 +2,14 @@
     namespace SlavaWins\AuthSms\Http\Controllers;
 
     use App\Actions\AuthSms\CreateNewUser;
+    use App\Actions\AuthSms\SendSms;
+    use App\Models\ResponseApi;
     use Barryvdh\Debugbar\Controllers\BaseController;
     use Carbon\Carbon;
     use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
     use Illuminate\Foundation\Bus\DispatchesJobs;
     use Illuminate\Foundation\Validation\ValidatesRequests;
+    use Illuminate\Support\Facades\RateLimiter;
     use Illuminate\Support\Facades\Validator;
     use Illuminate\Http\Request;
     use App\Models\User;
@@ -87,9 +90,16 @@
 
             /** @var PhoneVertify $phonevertify */
             $phonevertify = PhoneVertify::where("phone", $phone)->first();
-
+            
+            if(env('AUTHSMS_TEST_AttemptsMaxByIp', 0)>0) {
+                $limitKey = $_SERVER['REMOTE_ADDR'];
+                if (RateLimiter::tooManyAttempts($limitKey, env('AUTHSMS_TEST_AttemptsMaxByIp') )) {
+                    $seconds = RateLimiter::availableIn($limitKey);
+                    return redirect()->back()->withErrors(['Привышено общие число попыток, подождите '.$seconds.' сек.'])->withInput();
+                }
+            }
+            
             $antiBrutTime = 44;
-
             if ($phonevertify) {
                 if ($phonevertify->try_count > 1) {
                     if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
@@ -110,6 +120,8 @@
 
             if(env('AUTHSMS_TEST_MODE', false)){
                 $phonevertify->code = 1111;
+            }else{
+                SendSms::send($phone, SendSms::messageAuth($phonevertify->code));
             }
 
             $phonevertify->save();
@@ -119,7 +131,7 @@
             return view("authsms.phone-code", compact(['phone_draw', 'phone', 'tryId', 'phonevertify']));
         }
 
-        
+
         public function index() {
             return view("authsms.phone");
         }

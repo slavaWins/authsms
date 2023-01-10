@@ -26,9 +26,13 @@ composer require slavawins/authsms
 #Если true то код смс всегда будет 1111
 AUTHSMS_TEST_MODE=true
 
+#Колв попыток лимитированое одним ip. Поставить 0, что бы отключить антибрут по ip
+AUTHSMS_TEST_AttemptsMaxByIp = 4
+
 #Ключ от апи sms.ru
 AUTHSMS_SMSRU_API_KEY=xxx
  ``` 
+Для подключение апи отправки СМС, перейдите на:	http://zxc76.sms.ru/
 
 
 
