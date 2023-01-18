@@ -25,11 +25,11 @@ class AuthSmsServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'authsms');
-/*
+
         $this->publishes([
             __DIR__.'/../resources/js' => public_path('js/authsms'),
         ], 'public');
-*/
+
         $this->publishes([
             __DIR__.'/../../img' => public_path('img/authsms'),
         ], 'public');

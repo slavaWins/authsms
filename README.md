@@ -33,6 +33,12 @@ AUTHSMS_TEST_AttemptsMaxByIp = 4
 
 #Ключ от апи sms.ru
 AUTHSMS_SMSRU_API_KEY=xxx
+
+#Вместо смс, использовать просто пароль?
+AUTHSMS_USE_ONLY_PASSWORD=false
+
+#Разрешать вход только с одного номера или оставить поле пустым
+AUTHSMS_USE_ONLY_PHONE=9141111111
  ``` 
 Для подключение апи отправки СМС, перейдите на:	http://zxc76.sms.ru/
 

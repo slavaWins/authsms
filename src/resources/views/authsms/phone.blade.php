@@ -2,15 +2,10 @@
 
 @section('scripts')
     <script>
-        $('.inp_phone>input').mask('(000) 000-00-00');
+        $('.inp_login>input').mask('(000) 000-00-00');
 
-        var isSended = false;
-        $('.inp_phone>input').on("keyup", function () {
-            if(isSended)return;
-            if ($(this).val().length == 15) {
-                isSended=true;
-                $('#formMain').submit();
-            }
+        AuthSms.CallByInputLen( $('.inp_login>input'), 15, function (){
+            $('#formMain').submit();
         });
     </script>
 @endsection
@@ -30,7 +25,7 @@
             Введите номер телефона
         </p>
 
-        @include('authsms.input-phone', ['ind'=>'phone', 'prefix'=>"+7",'placeholder'=>'(999) 000-00-00'])
+        @include('authsms.input-phone', ['ind'=>'login', 'prefix'=>"+7",'placeholder'=>'(999) 000-00-00'])
 
 
         <button type="submit" class="mt-4 btn btn-primary col-12 p-3 shadow-0 btn-submit-auth">

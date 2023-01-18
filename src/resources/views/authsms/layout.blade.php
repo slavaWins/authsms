@@ -2,6 +2,8 @@
 
 @section('app-col')
 
+    <script src="{{ asset('js/authsms/authsms.js')."?".microtime()  }}"></script>
+
     <div class="container">
         <div class="row">
 
@@ -91,7 +93,7 @@
 
                             <a class="navbar-brand   mb-2 " href="/"
                                style="text-align: center; display: block;     padding-top: 1px;">
-                                <img src="/img/Logo.svg" height="28" loading="lazy">
+                                <img src="/img/Logo.png" height="28" loading="lazy">
                             </a>
 
                             @yield('content_auth')
