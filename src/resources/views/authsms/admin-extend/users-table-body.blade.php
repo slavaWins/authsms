@@ -1,0 +1,3 @@
+<td>
+    {{$user->phone}}
+</td>
