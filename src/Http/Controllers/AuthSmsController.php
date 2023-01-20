@@ -47,6 +47,9 @@ class AuthSmsController extends BaseController
             return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . $seconds . ' сек.'])->withInput();
         }
 
+        if ($phonevertify->ip <> $_SERVER['REMOTE_ADDR']) {
+            return redirect()->back()->withErrors(['Ошибка ip адресса'])->withInput();
+        }
         /** @var User $user */
         $user = User::where("phone", $phonevertify->phone)->first();
 
@@ -62,6 +65,9 @@ class AuthSmsController extends BaseController
             $user->password = Hash::make($data['code']);
             $user->save();
         }
+
+        $phonevertify->user_id = $user->id;
+        $phonevertify->save();
 
         Auth::login($user);
 
@@ -86,6 +92,10 @@ class AuthSmsController extends BaseController
 
         $data = $validator->validate();
 
+        if ($phonevertify->ip <> $_SERVER['REMOTE_ADDR']) {
+            return redirect()->back()->withErrors(['Ошибка ip адресса'])->withInput();
+        }
+
         if (self::AntiBrut("sms")) {
             return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . $seconds . ' сек.'])->withInput();
         }
@@ -102,6 +112,9 @@ class AuthSmsController extends BaseController
             $user->phone = $phonevertify->phone;
             $user->save();
         }
+
+        $phonevertify->user_id = $user->id;
+        $phonevertify->save();
 
         Auth::login($user);
 
@@ -152,13 +165,13 @@ class AuthSmsController extends BaseController
         $phone_draw = Formater::formatPhoneNumber("7" . $data['phone']);
         $phone = $data['phone'];
 
-        if(env('AUTHSMS_USE_ONLY_PHONE', false)){
-            if($phone<>env('AUTHSMS_USE_ONLY_PHONE', false)){
+        if (env('AUTHSMS_USE_ONLY_PHONE', false)) {
+            if ($phone <> env('AUTHSMS_USE_ONLY_PHONE', false)) {
                 return redirect()->back()->withErrors(['Сайт находится в разработке, и система авторизации отключена. Извините.'])->withInput();
             }
         }
         /** @var PhoneVertify $phonevertify */
-        $phonevertify = PhoneVertify::where("phone", $phone)->first();
+        $phonevertify = PhoneVertify::where("phone", $phone)->where("ip", $_SERVER['REMOTE_ADDR'])->first();
 
         if (self::AntiBrut("sms")) {
             return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . $seconds . ' сек.'])->withInput();
@@ -178,6 +191,7 @@ class AuthSmsController extends BaseController
             $phonevertify = new PhoneVertify();
             $phonevertify->try_count = 0;
             $phonevertify->phone = $phone;
+            $phonevertify->ip = $_SERVER['REMOTE_ADDR'];
         }
 
         $phonevertify->try_count += 1;
