@@ -25,6 +25,8 @@
                 $table->string('ip')->comment("ипишник")->nullable();
                 $table->string('phone')->comment("телефон")->nullable();
                 $table->boolean('is_sended_on_phone')->comment("если получилось отправить на телефон смску. Типа вдруг апи не отработал")->default(false);
+                $table->boolean('is_closed')->comment("Авторизация выполнена")->default(false);
+                $table->json('custom_data')->comment("Какая-то кастомная дата. Например при регистрации было чета важное")->default(false);
                 $table->timestamp('last_try')->comment("посл попытка авторизации")->nullable();
 
                 $table->timestamps();

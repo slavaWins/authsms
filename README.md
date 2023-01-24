@@ -39,6 +39,9 @@ AUTHSMS_USE_ONLY_PASSWORD=false
 
 #Разрешать вход только с одного номера или оставить поле пустым
 AUTHSMS_USE_ONLY_PHONE=9141111111
+
+#Если привышено число поыток то сколько ждать челу до след попытки
+AUTHSMS_TEST_WaitInSecondsIsBrut=120
  ``` 
 Для подключение апи отправки СМС, перейдите на:	http://zxc76.sms.ru/
 

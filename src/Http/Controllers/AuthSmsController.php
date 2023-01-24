@@ -43,8 +43,8 @@ class AuthSmsController extends BaseController
 
         $data = $validator->validate();
 
-        if (self::AntiBrut("sms")) {
-            return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . $seconds . ' сек.'])->withInput();
+        if (self::IsBrutoforce("sms")) {
+            return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . self::IsBrutoforce("sms") . ' сек.'])->withInput();
         }
 
         if ($phonevertify->ip <> $_SERVER['REMOTE_ADDR']) {
@@ -96,12 +96,17 @@ class AuthSmsController extends BaseController
             return redirect()->back()->withErrors(['Ошибка ip адресса'])->withInput();
         }
 
-        if (self::AntiBrut("sms")) {
-            return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . $seconds . ' сек.'])->withInput();
+        if (self::IsBrutoforce("sms")) {
+            return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . self::IsBrutoforce("sms") . ' сек.'])->withInput();
         }
 
         if ($phonevertify->code <> $data['code']) {
-            return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз'])->withInput();
+            $phonevertify->try_count += 1;
+            if ($phonevertify->try_count > 3) {
+                $phoneVertify->delete();
+                return redirect()->back()->withErrors(['code' => 'Не осталось попыток.'])->withInput();
+            }
+            return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз. Осталось попыток: ' . (3 - $phonevertify->try_count)])->withInput();
         }
 
         /** @var User $user */
@@ -114,6 +119,7 @@ class AuthSmsController extends BaseController
         }
 
         $phonevertify->user_id = $user->id;
+        $phonevertify->is_closed = true;
         $phonevertify->save();
 
         Auth::login($user);
@@ -121,15 +127,29 @@ class AuthSmsController extends BaseController
         return redirect()->route("home");
     }
 
-    public static function AntiBrut($ind)
+    /**
+     * Проверить на брут с этого ip
+     * @param $ind
+     * @param string $ip если не вводить, то будет REMOTE_ADDR юзаться
+     * @return bool
+     */
+    public static function IsBrutoforce($ind, $ip = null)
     {
+        if ($ip == null) $_SERVER['REMOTE_ADDR'];
+
         if (env('AUTHSMS_TEST_AttemptsMaxByIp', 0) > 0) {
-            $limitKey = $ind . $_SERVER['REMOTE_ADDR'];
+
+            $limitKey = $ind . '__' . $ip;
+
+
             if (RateLimiter::tooManyAttempts($limitKey, env('AUTHSMS_TEST_AttemptsMaxByIp'))) {
                 $seconds = RateLimiter::availableIn($limitKey);
-                return true;
+                return $seconds;
             }
+            RateLimiter::hit($limitKey, env('AUTHSMS_TEST_WaitInSecondsIsBrut', 60 * 5));
         }
+
+
         return false;
     }
 
@@ -170,33 +190,24 @@ class AuthSmsController extends BaseController
                 return redirect()->back()->withErrors(['Сайт находится в разработке, и система авторизации отключена. Извините.'])->withInput();
             }
         }
-        /** @var PhoneVertify $phonevertify */
-        $phonevertify = PhoneVertify::where("phone", $phone)->where("ip", $_SERVER['REMOTE_ADDR'])->first();
 
-        if (self::AntiBrut("sms")) {
-            return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . $seconds . ' сек.'])->withInput();
+
+        if (self::IsBrutoforce("sms")) {
+            return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . self::IsBrutoforce("sms") . ' сек.'])->withInput();
         }
+
+        $phonevertify = PhoneVertify::MakeTryByPhone($phone, $_SERVER['REMOTE_ADDR']);
 
 
         $antiBrutTime = 44;
-        if ($phonevertify) {
-            if ($phonevertify->try_count > 1) {
-                if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
-                    $phonevertify->try_count = 0;
-                } else {
-                    return redirect()->back()->withErrors(['Привышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
-                }
+        if ($phonevertify->try_count > 2) {
+            if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
+                $phonevertify->try_count = 0;
+            } else {
+                return redirect()->back()->withErrors(['Привышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
             }
-        } else {
-            $phonevertify = new PhoneVertify();
-            $phonevertify->try_count = 0;
-            $phonevertify->phone = $phone;
-            $phonevertify->ip = $_SERVER['REMOTE_ADDR'];
         }
 
-        $phonevertify->try_count += 1;
-        $phonevertify->last_try = Carbon::now();
-        $phonevertify->code = rand(1000, 9999);
 
         if (env('AUTHSMS_TEST_MODE', false)) {
             $phonevertify->code = 1111;
