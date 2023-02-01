@@ -18,7 +18,7 @@
             });
 
             Schema::create('phone_vertifies', function(Blueprint $table) {
-                $table->id();
+                $table->uuid('id')->primary()->unique();
                 $table->integer('try_count')->default(0)->comment("Колв попыток");
                 $table->integer('user_id')->default(0)->comment("пользователь к которому привязано");
                 $table->string('code')->comment("код")->nullable();
@@ -26,7 +26,7 @@
                 $table->string('phone')->comment("телефон")->nullable();
                 $table->boolean('is_sended_on_phone')->comment("если получилось отправить на телефон смску. Типа вдруг апи не отработал")->default(false);
                 $table->boolean('is_closed')->comment("Авторизация выполнена")->default(false);
-                $table->json('custom_data')->comment("Какая-то кастомная дата. Например при регистрации было чета важное");
+                $table->json('custom_data')->comment("Какая-то кастомная дата. Например при регистрации было чета важное")->nullable();
                 $table->timestamp('last_try')->comment("посл попытка авторизации")->nullable();
 
                 $table->timestamps();
