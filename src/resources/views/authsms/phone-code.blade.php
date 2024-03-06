@@ -22,7 +22,7 @@
             Введите код
         </p>
         <small class="mb-1">
-            Отправленный на номер {{$phone_draw}}
+            Отправленный на {{$phone_draw}}
         </small>
 
         @include('authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXX'])

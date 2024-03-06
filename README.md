@@ -37,6 +37,9 @@ AUTHSMS_SMSRU_API_KEY=xxx
 #Вместо смс, использовать просто пароль?
 AUTHSMS_USE_ONLY_PASSWORD=false
 
+#Можно использовать почту, и отправку на почту кода. Аналогично СМС
+AUTHSMS_USE_MAIL=false
+
 #Разрешать вход только с одного номера или оставить поле пустым
 AUTHSMS_USE_ONLY_PHONE=9141111111
 

@@ -17,6 +17,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Testing\Fluent\Concerns\Has;
 use SlavaWins\AuthSms\Library\Formater;
+use SlavaWins\AuthSms\Library\SendEmail;
 use SlavaWins\AuthSms\Models\PhoneVertify;
 use Illuminate\Support\Facades\Hash;
 
@@ -110,11 +111,21 @@ class AuthSmsController extends BaseController
         }
 
         /** @var User $user */
-        $user = User::where("phone", $phonevertify->phone)->first();
+        $user = null;
+
+        if (env('AUTHSMS_USE_MAIL', false)) {
+            $user = User::where("email", $phonevertify->phone)->first();
+        } else{
+            $user = User::where("phone", $phonevertify->phone)->first();
+        }
 
         if (!$user) {
             $user = CreateNewUser::create();
-            $user->phone = $phonevertify->phone;
+            if (env('AUTHSMS_USE_MAIL', false)) {
+                $user->email = $phonevertify->phone;
+            }else{
+                $user->phone = $phonevertify->phone;
+            }
             $user->save();
         }
 
@@ -185,6 +196,11 @@ class AuthSmsController extends BaseController
         $phone_draw = Formater::formatPhoneNumber("7" . $data['phone']);
         $phone = $data['phone'];
 
+
+        if (env('AUTHSMS_USE_MAIL', false)) {
+            return redirect()->back()->withErrors(['Не поддерживаемый способ авторизации'])->withInput();
+        }
+
         if (env('AUTHSMS_USE_ONLY_PHONE', false)) {
             if ($phone <> env('AUTHSMS_USE_ONLY_PHONE', false)) {
                 return redirect()->back()->withErrors(['Сайт находится в разработке, и система авторизации отключена. Извините.'])->withInput();
@@ -233,9 +249,92 @@ class AuthSmsController extends BaseController
     }
 
 
+    public function email(Request $request)
+    {
+
+        $data = $request->toArray();
+
+        $data['email'] = $data['login'] ?? "";
+        $data['email'] = str_replace(' ', '', $data['email']);
+
+
+        $validator = Validator::make(
+            $data,
+            [
+                'email' => 'required|email|min:3|max:50',
+            ],
+            [
+            ],
+            [
+                'email' => 'почта',
+            ]
+        );
+
+
+        $data = $validator->validate();
+
+        $phone_draw =$data['email'];
+        $phone = $data['email'];
+
+        if (!env('AUTHSMS_USE_MAIL', false)) {
+            return redirect()->back()->withErrors(['Не поддерживаемый способ авторизации'])->withInput();
+        }
+
+        if (env('AUTHSMS_USE_ONLY_PHONE', false)) {
+            if ($phone <> env('AUTHSMS_USE_ONLY_PHONE', false)) {
+                return redirect()->back()->withErrors(['Сайт находится в разработке, и система авторизации отключена. Извините.'])->withInput();
+            }
+        }
+
+
+        if (self::IsBrutoforce("sms")) {
+            return redirect()->back()->withErrors(['Привышено общие число попыток, подождите ' . self::IsBrutoforce("sms") . ' сек.'])->withInput();
+        }
+
+        $phonevertify = PhoneVertify::MakeTryByPhone($phone, $_SERVER['REMOTE_ADDR']);
+
+
+        $antiBrutTime = 44;
+        if ($phonevertify->try_count > 2) {
+            if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
+                $phonevertify->try_count = 0;
+            } else {
+                return redirect()->back()->withErrors(['Привышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
+            }
+        }
+
+
+        if (env('AUTHSMS_TEST_MODE', false)) {
+            $phonevertify->code = 1111;
+        } else {
+            SendEmail::send($phone, $phonevertify->code);
+        }
+
+        $phonevertify->save();
+
+        $tryId = $phonevertify->id;
+
+        $isRegister = User::where("phone", $phone)->first() == null;
+
+
+        $compact = compact(['phone_draw', 'phone', 'tryId', 'phonevertify', 'isRegister']);
+
+        if (env('AUTHSMS_USE_ONLY_PASSWORD', false)) {
+            return view("authsms.password", $compact);
+        } else {
+            return view("authsms.phone-code", $compact);
+        }
+
+    }
+
+
     public function index()
     {
-        return view("authsms.phone");
+        if(env("AUTHSMS_USE_MAIL")) {
+            return view("authsms.email");
+        }else{
+            return view("authsms.phone");
+        }
     }
 
 }
