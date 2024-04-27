@@ -10,9 +10,9 @@ use SlavaWins\AuthSms\Http\Controllers\AuthSmsController;
 class AuthSmsRoute
 {
 
-    public static function routes()
+    public static function routes($loginRoute = "login")
     {
-        Route::get('/auth', [AuthSmsController::class, 'index'])->name('login');
+        Route::get('/auth', [AuthSmsController::class, 'index'])->name($loginRoute);
         Route::post('/auth', [AuthSmsController::class, 'phone'])->name('auth.phone.send');
         Route::post('/auth-email', [AuthSmsController::class, 'email'])->name('auth.email.send');
         Route::post('/auth/code/{phonevertify}', [AuthSmsController::class, 'code'])->name('auth.code.send');
