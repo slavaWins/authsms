@@ -38,6 +38,28 @@ class DeBruteService
         return false;
     }
 
+    public static function IsBrutoforceCustom($ind, $tryCount=5, $waitTime=6000)
+    {
+
+
+        $ip = request()->ip();
+
+
+            $limitKey = $ind . '__' . $ip;
+
+            if (RateLimiter::tooManyAttempts($limitKey, $tryCount)) {
+                $seconds = RateLimiter::availableIn($limitKey);
+
+                return $seconds;
+            }
+
+            RateLimiter::hit($limitKey, $waitTime);
+
+
+
+        return false;
+    }
+
 
     /**
      *

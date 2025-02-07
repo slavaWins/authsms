@@ -3,7 +3,7 @@
 
 namespace SlavaWins\AuthSms\IntegrationTests;
 
-//use PHPUnit\Framework\TestCase;
+use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use SlavaWins\AuthSms\Models\PhoneVertify;
 use Tests\TestCase;
@@ -18,6 +18,8 @@ class LoginAuthTest extends TestCase
 
         Cache::flush();
         PhoneVertify::where("id", ">", 0)->delete();
+
+        config(["authsms.AUTHSMS_AUTO_REGISTRATION" => true]);
     }
 
     public function IsErrorResponse()
@@ -89,7 +91,7 @@ class LoginAuthTest extends TestCase
 
     }
 
-    public function test_BadCasePhone()
+    public function test_RetryAndOldCodes()
     {
         config(["authsms.AUTHSMS_USE_MAIL" => false]);
 
@@ -104,12 +106,58 @@ class LoginAuthTest extends TestCase
         $this->assertEquals(302, $result->status());
 
 
-
         $getLastCode->created_at = $getLastCode->created_at->addSeconds(60 * -51);
         $getLastCode->save();
         $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1111"]);
         $this->assertEquals("Код устарел, повторите авторизацию", $this->IsErrorResponse());
         $this->assertEquals(302, $result->status());
+
+    }
+
+
+    public function test_WithotRegistration()
+    {
+        config(["authsms.AUTHSMS_USE_MAIL" => false]);
+        config(["authsms.AUTHSMS_AUTO_REGISTRATION" => false]);
+
+        $result = $this->post("/auth", ['login' => "9991199862"]);
+        $this->assertEquals(302, $result->status());
+        $this->assertEquals("Не найден аккаунт", $this->IsErrorResponse());
+
+
+
+        $user = User::whereNotNull("phone")->first();
+        $result = $this->post("/auth", ['login' => $user->phone]);
+        $this->assertEquals(200, $result->status());
+
+
+        config(["authsms.AUTHSMS_USE_MAIL" => true]);
+        $user = User::whereNotNull("email")->first();
+        $result = $this->post("/auth-email", ['login' => $user->email]);
+        $this->assertEquals(200, $result->status());
+
+
+
+    }
+
+    public function test_BadCasePhone()
+    {
+        config(["authsms.AUTHSMS_USE_MAIL" => false]);
+
+        $result = $this->post("/auth", ['login' => "9299999862"]);
+        $this->assertEquals(200, $result->status());
+
+        $phonesBad = [
+            "3809999862",
+            "3809999862",
+            "1415999862",
+            "2493099986",
+            "3310999862",
+        ];
+        foreach ($phonesBad as $value) {
+            $result = $this->post("/auth", ['login' => $value]);
+            $this->assertEquals("Не корректный номер телефона", $this->IsErrorResponse(), "Номер телефона " . $value);
+        }
 
     }
 

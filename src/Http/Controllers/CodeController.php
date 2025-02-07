@@ -3,24 +3,18 @@
 namespace SlavaWins\AuthSms\Http\Controllers;
 
 use App\Actions\AuthSms\CreateNewUser;
-use App\Actions\AuthSms\SendSms;
-use App\Models\ResponseApi;
+use App\Models\User;
 use Barryvdh\Debugbar\Controllers\BaseController;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
-use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Testing\Fluent\Concerns\Has;
-use SlavaWins\AuthSms\Library\DeBruteService;
-use SlavaWins\AuthSms\Library\Formater;
-use SlavaWins\AuthSms\Library\SendEmail;
-use SlavaWins\AuthSms\Models\PhoneVertify;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Validator;
+use SlavaWins\AuthSms\Library\DeBruteService;
+use SlavaWins\AuthSms\Models\PhoneVertify;
 
 class CodeController extends BaseController
 {
@@ -40,7 +34,7 @@ class CodeController extends BaseController
             abort(404);
         }
 
-        if($phonevertify->created_at->diffInSeconds(Carbon::now()) > 60*3 || $phonevertify->is_closed){
+        if ($phonevertify->created_at->diffInSeconds(Carbon::now()) > 60 * 3 || $phonevertify->is_closed) {
             $phonevertify->delete();
             return redirect()->back()->withErrors(['Код устарел, повторите авторизацию'])->withInput();
         }
@@ -100,7 +94,7 @@ class CodeController extends BaseController
         }
 
 
-        if($phonevertify->created_at->diffInSeconds(Carbon::now()) > 60*3 || $phonevertify->is_closed){
+        if ($phonevertify->created_at->diffInSeconds(Carbon::now()) > 60 * 3 || $phonevertify->is_closed) {
             return redirect()->back()->withErrors(['Код устарел, повторите авторизацию'])->withInput();
         }
 
@@ -142,7 +136,7 @@ class CodeController extends BaseController
 
         if (config("authsms.AUTHSMS_USE_MAIL", false)) {
             $user = User::where("email", $phonevertify->phone)->first();
-        } else{
+        } else {
             $user = User::where("phone", $phonevertify->phone)->first();
         }
 
@@ -150,7 +144,7 @@ class CodeController extends BaseController
             $user = CreateNewUser::create();
             if (config("authsms.AUTHSMS_USE_MAIL", false)) {
                 $user->email = $phonevertify->phone;
-            }else{
+            } else {
                 $user->phone = $phonevertify->phone;
             }
             $user->save();
@@ -168,9 +162,9 @@ class CodeController extends BaseController
 
     public function index()
     {
-        if(env("AUTHSMS_USE_MAIL")) {
+        if (env("AUTHSMS_USE_MAIL")) {
             return view("authsms.email");
-        }else{
+        } else {
             return view("authsms.phone");
         }
     }

@@ -11,6 +11,7 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use libphonenumber\PhoneNumberUtil;
 use SlavaWins\AuthSms\Library\DeBruteService;
 use SlavaWins\AuthSms\Library\Formater;
 use SlavaWins\AuthSms\Library\SendEmail;
@@ -20,6 +21,17 @@ class LoginAuthSmsController extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+
+    public function validatePhoneNumber($phone)
+    {
+        $phoneUtil = PhoneNumberUtil::getInstance();
+        try {
+            $numberProto = $phoneUtil->parse($phone, "RU"); // "RU" - код страны по умолчанию
+            return $phoneUtil->isValidNumber($numberProto);
+        } catch (\libphonenumber\NumberParseException $e) {
+            return false;
+        }
+    }
 
     public function phone(Request $request)
     {
@@ -54,6 +66,9 @@ class LoginAuthSmsController extends BaseController
         $phone_draw = Formater::formatPhoneNumber("7" . $data['phone']);
         $phone = $data['phone'];
 
+        if (!$this->validatePhoneNumber($phone)) {
+            return redirect()->back()->withErrors(['Не корректный номер телефона'])->withInput();
+        }
 
         if (config("authsms.AUTHSMS_USE_MAIL", false)) {
             return redirect()->back()->withErrors(['Не поддерживаемый способ авторизации'])->withInput();
@@ -81,6 +96,19 @@ class LoginAuthSmsController extends BaseController
         }
 
 
+        if (!config("authsms.AUTHSMS_AUTO_REGISTRATION", false)) {
+
+
+            if (DeBruteService::IsBrutoforceCustom("checkLogins")) {
+                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
+            }
+
+
+            if (!User::where("phone", $phone)->exists()) {
+                return redirect()->back()->withErrors(['Не найден аккаунт'])->withInput();
+            }
+        }
+
         $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip());
 
 
@@ -94,7 +122,7 @@ class LoginAuthSmsController extends BaseController
         }
 
 
-        if (env('AUTHSMS_TEST_MODE', false)) {
+        if (config('authsms.AUTHSMS_TEST_MODE', false)) {
             $phonevertify->code = 1111;
         } else {
             SendSms::send($phone, SendSms::messageAuth($phonevertify->code));
@@ -150,13 +178,11 @@ class LoginAuthSmsController extends BaseController
         $phone = $data['email'];
 
 
-
         if (env('AUTHSMS_USE_ONLY_PHONE', false)) {
             if ($phone <> env('AUTHSMS_USE_ONLY_PHONE', false)) {
                 return redirect()->back()->withErrors(['Сайт находится в разработке, и система авторизации отключена. Извините.'])->withInput();
             }
         }
-
 
 
         if (DeBruteService::IsGlobalBrutoforceAll()) {
@@ -171,6 +197,19 @@ class LoginAuthSmsController extends BaseController
             return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
         }
 
+
+        if (!config("authsms.AUTHSMS_AUTO_REGISTRATION", false)) {
+
+            if (DeBruteService::IsBrutoforceCustom("checkLogins")) {
+                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
+            }
+
+            if (!User::where("email", $phone)->exists()) {
+                return redirect()->back()->withErrors(['Не найден аккаунт'])->withInput();
+            }
+        }
+
+
         $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip());
 
 
@@ -181,10 +220,11 @@ class LoginAuthSmsController extends BaseController
             } else {
                 return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
             }
+
         }
 
 
-        if (env('AUTHSMS_TEST_MODE', false)) {
+        if (config('authsms.AUTHSMS_TEST_MODE',false)) {
             $phonevertify->code = 1111;
         } else {
             SendEmail::send($phone, $phonevertify->code);
