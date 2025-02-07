@@ -87,7 +87,7 @@ class LoginAuthSmsController extends BaseController
 
 
         if (DeBruteService::IsGlobalBrutoforce($phone)) {
-            return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsGlobalBrutoforce($phone) . ' сек'])->withInput();
+            return redirect()->back()->withErrors(['Аккаунт временно заблокирован, подождите ' . DeBruteService::IsGlobalBrutoforce($phone) . ' сек.'])->withInput();
         }
 
 
@@ -99,8 +99,8 @@ class LoginAuthSmsController extends BaseController
         if (!config("authsms.AUTHSMS_AUTO_REGISTRATION", false)) {
 
 
-            if (DeBruteService::IsBrutoforceCustom("checkLogins")) {
-                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
+            if (DeBruteService::IsBrutoforceCustom("checkLogins", 10)) {
+                return redirect()->back()->withErrors(['Превышен лимит входа в разные аккаунты ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
             }
 
 
