@@ -43,7 +43,7 @@ AUTHSMS_USE_MAIL=false
 #Разрешать вход только с одного номера или оставить поле пустым
 AUTHSMS_USE_ONLY_PHONE=9141111111
 
-#Если привышено число поыток то сколько ждать челу до след попытки
+#Если Превышено число поыток то сколько ждать челу до след попытки
 AUTHSMS_TEST_WaitInSecondsIsBrut=120
  ``` 
 Для подключение апи отправки СМС, перейдите на:	http://zxc76.sms.ru/
@@ -78,3 +78,16 @@ AUTHSMS_TEST_WaitInSecondsIsBrut=120
  
 7) Пользователь создается в экшен классе app\Actions\AuthSms\CreateNewUser.php
 Там вы можете указать кастомные поля, и напримере если у вас что-то не может быть nullable и не имеет defualt value. 
+
+
+
+## Tests
+
+
+       <testsuite name="AuthSms">
+            <directory suffix="Test.php">./vendor/slavawins/authsms/src/IntegrationTests</directory>
+        </testsuite>    
+
+Что затестить отдельно сервис
+
+    php artisan test --testsuite=AuthSms
