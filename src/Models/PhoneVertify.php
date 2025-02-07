@@ -48,14 +48,37 @@ class PhoneVertify extends Model
     }
 
 
-    public static function MakeTryByPhone($phone, $ip )
+    public function IsCodeEqals($code1)
+    {
+        return $this->code === $this->CodeHashCode($code1);
+
+    }
+
+    public function CodeHashCode($code)
+    {
+        $res = md5($code . '' . $this->ip . '_' . Carbon::now()->format("d.m.Y"));
+        $res .= md5($code.''.config('app.key'));
+        $res = substr($res, 0, 255);
+        return $res;
+    }
+
+    public function SetCode($code)
+    {
+        $this->code = $this->CodeHashCode($code);
+    }
+
+    public static function GetRandomCode():string{
+        return rand(1000, 9999) . '';
+    }
+
+    public static function MakeTryByPhone($phone, $ip, $code)
     {
 
         $phonevertify = new PhoneVertify();
         $phonevertify->try_count = 0;
         $phonevertify->phone = $phone;
         $phonevertify->ip = $ip;
-        $phonevertify->code = rand(1000, 9999);
+        $phonevertify->SetCode(  $code);
         $phonevertify->save();
 
 

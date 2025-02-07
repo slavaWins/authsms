@@ -109,7 +109,8 @@ class LoginAuthSmsController extends BaseController
             }
         }
 
-        $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip());
+        $code = PhoneVertify::GetRandomCode();
+        $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip(), $code);
 
 
         $antiBrutTime = 44;
@@ -122,8 +123,9 @@ class LoginAuthSmsController extends BaseController
         }
 
 
+
         if (config('authsms.AUTHSMS_TEST_MODE', false)) {
-            $phonevertify->code = 1111;
+            $phonevertify->SetCode("1111");
         } else {
             SendSms::send($phone, SendSms::messageAuth($phonevertify->code));
         }
@@ -210,7 +212,8 @@ class LoginAuthSmsController extends BaseController
         }
 
 
-        $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip());
+        $code = PhoneVertify::GetRandomCode();
+        $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip(), $code);
 
 
         $antiBrutTime = 44;
@@ -225,7 +228,7 @@ class LoginAuthSmsController extends BaseController
 
 
         if (config('authsms.AUTHSMS_TEST_MODE',false)) {
-            $phonevertify->code = 1111;
+            $phonevertify->SetCode("1111");
         } else {
             SendEmail::send($phone, $phonevertify->code);
         }

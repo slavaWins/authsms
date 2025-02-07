@@ -115,17 +115,25 @@ class CodeController extends BaseController
         $data = $validator->validate();
 
         if ($phonevertify->ip <> $request->ip()) {
-            return redirect()->back()->withErrors(['IP адреса с которых вы запросили код и ввели не совпадают '])->withInput();
+            return redirect()->back()->withErrors(['IP адреса с которых вы запросили код и ввели не совпадают'])->withInput();
         }
 
         if (DeBruteService::IsBrutoforce("sms")) {
             return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
         }
 
-        if ($phonevertify->code <> $data['code']) {
+        if (DeBruteService::IsGlobalBrutoforce($phonevertify->phone)) {
+            return redirect()->back()->withErrors(['Этот аккаунт временно не доступен. Повторить вход через ' . DeBruteService::IsGlobalBrutoforce($phonevertify->phone) . ' сек.'])->withInput();
+        }
+
+        usleep(rand(0, 2800 ));
+
+        if (!$phonevertify->IsCodeEqals( $data['code'])) {
             $phonevertify->try_count += 1;
+            $phonevertify->save();
+
             if ($phonevertify->try_count > 3) {
-                $phonevertify->delete();
+               // $phonevertify->delete();
                 return redirect()->back()->withErrors(['code' => 'Не осталось попыток.'])->withInput();
             }
             return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз. Осталось попыток: ' . (3 - $phonevertify->try_count)])->withInput();
