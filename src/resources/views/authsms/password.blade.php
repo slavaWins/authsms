@@ -1,12 +1,15 @@
-@extends('authsms.layout')
+@extends('authsms::authsms.layout')
 
 
 @section('scripts')
     <script>
+        $(document).ready(function () {
         $('.inp_code>input').mask('AAAAAA');
 
         AuthSms.CallByInputLen($('.inp_code>input'), 6, function () {
            $('#formMain').submit();
+        });
+
         });
     </script>
 @endsection
@@ -29,7 +32,9 @@
             <p  class="mb-1 small text-center">Придумайте 6 значный пароль, для регистрации в сервисе.</p>
         @endif
 
-        @include('authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXXХХ', 'type'=>'text'])
+        @include('authsms::authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXXХХ', 'type'=>'text'])
+
+        @include('authsms::authsms.error-render')
 
         <button type="submit" class="mt-4 btn btn-primary col-12 p-3 shadow-0 btn-submit-auth">
             Отправить
@@ -37,7 +42,7 @@
 
         <p class="mt-2" style="font-size: 11px; line-height: 1em;">
             Нажимая «Далее», вы принимаете пользовательское соглашение и соглашаетесь на обработку вашей персональной
-            информации на условиях политики конфиденциальности
+            информации на условиях <a target='_blank' href="{{route("privacy")}}">политики конфиденциальности</a>
         </p>
 
     </form>

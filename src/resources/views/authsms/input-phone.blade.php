@@ -4,8 +4,9 @@
         <b class="col-auto inpFont">{{$prefix}}</b>
     @endif
     <input placeholder="{{$placeholder??""}}"
-           class="form-control col inpNumberReal inpFont  " name="{{$ind}}" type="{{$type??"text"}}"
-           value="{{ old($ind) }}" required autocomplete="{{$ind}}" autofocus>
+           class="form-control col inpNumberReal inpFont no-outline-input  " name="{{$ind}}" type="{{$type??"text"}}"
+           value="{{ $value ?? old($ind) }}" required autocomplete="{{$ind}}" autofocus>
+
 
 
     @error($ind)

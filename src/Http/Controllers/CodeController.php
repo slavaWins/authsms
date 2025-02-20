@@ -123,7 +123,7 @@ class CodeController extends BaseController
         }
 
         if (DeBruteService::IsGlobalBrutoforce($phonevertify->phone)) {
-            return redirect()->back()->withErrors(['Этот аккаунт временно не доступен. Повторить вход через ' . DeBruteService::IsGlobalBrutoforce($phonevertify->phone) . ' сек.'])->withInput();
+            return redirect()->back()->withErrors(['Этот аккаунт временно не доступен. Повторите вход через ' . DeBruteService::IsGlobalBrutoforce($phonevertify->phone) . ' сек.'])->withInput();
         }
 
         usleep(rand(0, 2800 ));
@@ -171,9 +171,9 @@ class CodeController extends BaseController
     public function index()
     {
         if (env("AUTHSMS_USE_MAIL")) {
-            return view("authsms.email");
+            return view("authsms::authsms.email");
         } else {
-            return view("authsms.phone");
+            return view("authsms::authsms.phone");
         }
     }
 

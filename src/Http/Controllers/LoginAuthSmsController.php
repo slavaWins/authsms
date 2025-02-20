@@ -140,9 +140,9 @@ class LoginAuthSmsController extends BaseController
         $compact = compact(['phone_draw', 'phone', 'tryId', 'phonevertify', 'isRegister']);
 
         if (env('AUTHSMS_USE_ONLY_PASSWORD', false)) {
-            return view("authsms.password", $compact);
+            return view("authsms::authsms.password", $compact);
         } else {
-            return view("authsms.phone-code", $compact);
+            return view("authsms::authsms.phone-code", $compact);
         }
 
     }
@@ -243,9 +243,9 @@ class LoginAuthSmsController extends BaseController
         $compact = compact(['phone_draw', 'phone', 'tryId', 'phonevertify', 'isRegister']);
 
         if (env('AUTHSMS_USE_ONLY_PASSWORD', false)) {
-            return view("authsms.password", $compact);
+            return view("authsms::authsms.password", $compact);
         } else {
-            return view("authsms.phone-code", $compact);
+            return view("authsms::authsms.phone-code", $compact);
         }
 
     }
@@ -254,9 +254,9 @@ class LoginAuthSmsController extends BaseController
     public function index()
     {
         if (env("AUTHSMS_USE_MAIL")) {
-            return view("authsms.email");
+            return view("authsms::authsms.email");
         } else {
-            return view("authsms.phone");
+            return view("authsms::authsms.phone");
         }
     }
 

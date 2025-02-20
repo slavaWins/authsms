@@ -1,12 +1,21 @@
-@extends('authsms.layout')
+@extends('authsms::authsms.layout')
 
 
 @section('scripts')
     <script>
+        $(document).ready(function () {
         $('.inp_code>input').mask('0000');
 
+        var isSended = false;
         AuthSms.CallByInputLen( $('.inp_code>input'), 4, function (){
+            if (isSended) return;
+
+            $('.isLoading').show();
+            $('.inp_code').hide();
             $('#formMain').submit();
+            isSended = true;
+        });
+
         });
     </script>
 @endsection
@@ -18,22 +27,30 @@
         @csrf
 
 
-        <p class="text-center mb-0" style=" font-size: 18px; color:#000;">
+        <p class="text-center mb-0" style=" font-size: 18px; ">
             Введите код
         </p>
-        <small class="mb-1">
-            Отправленный на {{$phone_draw}}
-        </small>
+        <div class="mb-2 text-center small ">
+            Отправленный на: <BR> {{$phone_draw}}
+        </div>
 
-        @include('authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXX'])
+        @include('authsms::authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXX'])
 
-        <button type="submit" class="mt-4 btn btn-primary col-12 p-3 shadow-0 btn-submit-auth">
-            Отправить
-        </button>
+        @include('authsms::authsms.error-render')
+
+
+        <p class="text-center isLoading mb-4" style=" font-size: 18px; color:#000; display: none;">
+         <span class="spinner _contentAttachSpiner spinner-border" style="width: 1.4rem; height: 1.4rem; "
+               role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </span>
+
+        </p>
+
 
         <p class="mt-2" style="font-size: 11px; line-height: 1em;">
             Нажимая «Далее», вы принимаете пользовательское соглашение и соглашаетесь на обработку вашей персональной
-            информации на условиях политики конфиденциальности
+            информации на условиях  <a target='_blank' href="{{route("privacy")}}">политики конфиденциальности</a>
         </p>
 
     </form>

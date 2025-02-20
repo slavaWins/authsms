@@ -58,7 +58,7 @@ class GuardCheckAuthTest extends TestCase
 
         //Уже правильный код не пройдет, потому что ак заблочен временно
         $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => '1111']);
-        $this->assertEquals("Этот аккаунт временно не доступен. Повторить вход через 900 сек.", $this->IsErrorResponse());
+        $this->assertEquals("Этот аккаунт временно не доступен. Повторите вход через 900 сек.", $this->IsErrorResponse());
     }
 
     public function test_ExpiredCodeAttack()

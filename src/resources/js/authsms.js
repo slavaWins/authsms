@@ -2,12 +2,20 @@ var AuthSms = {};
 
 AuthSms.CallByInputLen = function (input, len, callback) {
     var isSended = false;
-    input.on("keyup", function () {
+
+    var prevLen =input.val().length;
+
+    input.on("keyup", function (event) {
         if (isSended) return;
-        if ($(this).val().length == len) {
+
+        var length = $(this).val().length;
+
+        if (length == prevLen) return;
+
+        prevLen = length;
+        if (length == len) {
             isSended = true;
             callback();
-
         }
     });
 }

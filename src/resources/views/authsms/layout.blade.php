@@ -2,10 +2,11 @@
 
 @section('app-col')
 
-    <script src="{{ asset('js/authsms/authsms.js')."?".microtime()  }}"></script>
+
 
     <div class="container">
-        <div class="row">
+
+        <div class=" ">
 
             <style>
                 .navbarMain {
@@ -17,7 +18,7 @@
                 }
 
                 body {
-                    background: url("/img/authsms/background.jpg") center;
+                    background-image: url(/img/background-t.svg);
                     background-size: cover;
                 }
 
@@ -62,8 +63,10 @@
                 }
 
                 .inpNumberReal:focus {
-                    outline: none !important;
+                    outline: 0 !important;
+                    -webkit-tap-highlight-color: transparent;
                     border: none !important;
+                    box-shadow: none !important;
                 }
 
                 .inp_code input {
@@ -77,23 +80,9 @@
                     <div class="card p-0" style="border-radius: 25px;">
                         <div class="card-body  ">
 
-                            @if ($errors->any())
-                                <div class="   " style="color:#ff2f00;">
-                                    <ul>
-                                        @foreach ($errors->all() as $error)
-                                            <li>{{ $error }}</li>
-                                        @endforeach
-                                    </ul>
-                                </div>
-                            @endif
-
-                            <a class="btn-round-back-auth">
-                                <
-                            </a>
-
                             <a class="navbar-brand   mb-2 " href="/"
                                style="text-align: center; display: block;     padding-top: 1px;">
-                                <img src="/img/Logo.png" height="28" loading="lazy">
+                                <img src="/img/logo.svg" height="28" loading="lazy">
                             </a>
 
                             @yield('content_auth')
