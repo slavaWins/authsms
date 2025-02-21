@@ -114,8 +114,10 @@ class CodeController extends BaseController
 
         $data = $validator->validate();
 
-        if ($phonevertify->ip <> $request->ip()) {
-            return redirect()->back()->withErrors(['IP адреса с которых вы запросили код и ввели не совпадают'])->withInput();
+        if(config("authsms.IsCheckIpEqCodeLogin")) {
+            if ($phonevertify->ip <> $request->ip()) {
+                return redirect()->back()->withErrors(['IP адреса с которых вы запросили код и ввели не совпадают'])->withInput();
+            }
         }
 
         if (DeBruteService::IsBrutoforce("sms")) {
