@@ -45,6 +45,8 @@
 
         @include('authsms::authsms.input-phone', ['ind'=>'login', 'placeholder'=>'xxxx@mail.ru', "type"=>"email", 'value'=>request("login")])
 
+        @include('authsms::authsms.error-render')
+
         <p class="text-center isLoading mb-4" style=" font-size: 18px;  display: none;">
          <span class="spinner _contentAttachSpiner spinner-border" style="width: 1.4rem; height: 1.4rem; "
                role="status">

@@ -127,7 +127,7 @@ class LoginAuthSmsController extends BaseController
         if (config('authsms.AUTHSMS_TEST_MODE', false)) {
             $phonevertify->SetCode("1111");
         } else {
-            SendSms::send($phone, SendSms::messageAuth($phonevertify->code));
+            SendSms::send($phone, SendSms::messageAuth($code));
         }
 
         $phonevertify->save();
@@ -230,7 +230,7 @@ class LoginAuthSmsController extends BaseController
         if (config('authsms.AUTHSMS_TEST_MODE',false)) {
             $phonevertify->SetCode("1111");
         } else {
-            SendEmail::send($phone, $phonevertify->code);
+            SendEmail::send($phone, $code);
         }
 
         $phonevertify->save();
