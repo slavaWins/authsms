@@ -65,6 +65,7 @@ class LoginAuthSmsController extends BaseController
 
         $phone_draw = Formater::formatPhoneNumber("7" . $data['phone']);
         $phone = $data['phone'];
+        $phone = config("authsms.PreappenPhoneCode", "") . $phone;
 
         if (!$this->validatePhoneNumber($phone)) {
             return redirect()->back()->withErrors(['Не корректный номер телефона'])->withInput();

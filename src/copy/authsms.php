@@ -16,14 +16,19 @@ return [
 
 
     //Массовая атака на все номера и логины, колв поыпток
-    'GlobalBrutoforceForAll' => env("AUTHSMS_TEST_GlobalBrutoforceForAll", 35),
+    'GlobalBrutoforceForAll' => intval(  env("AUTHSMS_TEST_GlobalBrutoforceForAll") ?? env("AUTHSMS_LIMIT_GlobalBrutoforceForAll", 35)),
 
     //Массовая брут атака на конкретный логин
-    'GlobalBrutoforcePerLogin' => env("AUTHSMS_TEST_GlobalBrutoforcePerLogin", 5),
+    'GlobalBrutoforcePerLogin' => intval(  env("AUTHSMS_TEST_GlobalBrutoforcePerLogin") ??  env("AUTHSMS_LIMIT_GlobalBrutoforcePerLogin", 5)),
 
     //Лимит попыток на один ип
-    'AttemptsMaxByIp' => env("AUTHSMS_TEST_AttemptsMaxByIp", 3),
+    'AttemptsMaxByIp' => intval(  env("AUTHSMS_TEST_AttemptsMaxByIp") ?? env("AUTHSMS_LIMIT_AttemptsMaxByIp", 3)),
 
     //Сколько ждать если было много попыток с одного ип
-    'WaitInSecondsIsBrut' => env("AUTHSMS_TEST_WaitInSecondsIsBrut", 60 * 15),
+    'WaitInSecondsIsBrut' => intval( env("AUTHSMS_TEST_WaitInSecondsIsBrut") ?? env("AUTHSMS_LIMIT_WaitInSecondsIsBrut", 60 * 16)),
+
+
+    'IsCheckIpEqCodeLogin' => env("AUTHSMS_CHECK_EQ_IP", true),
+
+    'PreappenPhoneCode' => env("AUTHSMS_TEST_PREAPPEND_PHONE_CODE", ""),
 ];
