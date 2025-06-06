@@ -1,5 +1,6 @@
 var AuthSms = {};
 
+
 AuthSms.CallByInputLen = function (input, len, callback) {
     var isSended = false;
 

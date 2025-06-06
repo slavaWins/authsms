@@ -10,8 +10,9 @@
         isSended = true;
 
 
-        console.log("St");
         $(document).ready(function () {
+
+            var inputLogin = $('.inp_login>input');
 
             $('.isLoading').hide();
             $('.inp_phone_auth').show();
@@ -19,7 +20,10 @@
             $('.inp_login>input').mask('(000) 000-00-00');
 
             var isSended = false;
+            var isAutoSendeingEnabled = true;
+
             AuthSms.CallByInputLen($('.inp_login>input'), 15, function () {
+                if (!isAutoSendeingEnabled) return;
                 if (isSended) return;
 
                 $('.isLoading').show();
@@ -31,6 +35,36 @@
                 isSended = true;
             });
 
+
+            function moveCaretToEnd(input) {
+                const el = input[0]; // Получаем нативный DOM-элемент из jQuery объекта
+                el.focus();
+                el.setSelectionRange(el.value.length, el.value.length);
+            }
+
+            if(inputLogin.val().length> 0){
+                console.log("not empty");
+                moveCaretToEnd(inputLogin);
+                isAutoSendeingEnabled=false;
+                $('.btnSubmitLogin').show();
+            }
+
+
+
+            $('.inp_login>input').on('paste', function (e) {
+                var clipboardData = e.originalEvent.clipboardData || window.clipboardData;
+                var pastedText = clipboardData.getData('text');
+                var cleanedText = pastedText.replace(/^\+7/, '');
+
+                if (pastedText.length < 10) return;
+
+                e.preventDefault();
+                console.log(cleanedText);
+                $('.inp_login>input').val(cleanedText);
+                $('.inp_login>input').trigger("input");
+
+                return false;
+            });
 
         });
 
@@ -48,6 +82,8 @@
         </p>
 
         @include('authsms::authsms.input-phone', ['ind'=>'login', 'prefix'=>"+7",'placeholder'=>'(999) 000-00-00', 'value'=>request("login")])
+
+        <button type="submit" class="btn btn-primary w-100 btnSubmitLogin" style="display:none;" >Отправить</button>
 
         @include('authsms::authsms.error-render')
 

@@ -138,7 +138,8 @@ class CodeController extends BaseController
                // $phonevertify->delete();
                 return redirect()->back()->withErrors(['code' => 'Не осталось попыток.'])->withInput();
             }
-            return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз. Осталось попыток: ' . (3 - $phonevertify->try_count)])->withInput();
+            return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз. Осталось попыток: ' . (3 - $phonevertify->try_count)])
+                ->withInput();
         }
 
         /** @var User $user */

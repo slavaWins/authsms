@@ -39,6 +39,7 @@ class LoginAuthSmsController extends BaseController
             abort(404);
         }
 
+
         $data = $request->toArray();
 
         $data['phone'] = $data['login'] ?? "";
