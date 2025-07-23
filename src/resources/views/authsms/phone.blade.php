@@ -83,9 +83,11 @@
 
         @include('authsms::authsms.input-phone', ['ind'=>'login', 'prefix'=>"+7",'placeholder'=>'(999) 000-00-00', 'value'=>request("login")])
 
-        <button type="submit" class="btn btn-primary w-100 btnSubmitLogin" style="display:none;" >Отправить</button>
 
         @include('authsms::authsms.error-render')
+
+        <button type="submit" class="btn btn-primary w-100 btnSubmitLogin" style="display:none;" >Отправить</button>
+
 
         @if(View::exists('services.socialite.auth'))
             @include('services.socialite.auth')
