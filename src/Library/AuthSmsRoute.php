@@ -15,6 +15,8 @@ class AuthSmsRoute
     {
         Route::get('/auth', [LoginAuthSmsController::class, 'index'])->name($loginRoute);
         Route::post('/auth', [LoginAuthSmsController::class, 'phone'])->name('auth.phone.send');
+
+        Route::get('/auth-email', [LoginAuthSmsController::class, 'index']);
         Route::post('/auth-email', [LoginAuthSmsController::class, 'email'])->name('auth.email.send');
 
         Route::post('/auth/code/{phonevertify}', [CodeController::class, 'code'])->name('auth.code.send');
