@@ -83,26 +83,32 @@ class LoginAuthSmsController extends BaseController
         }
 
 
-        if (DeBruteService::IsGlobalBrutoforceAll()) {
-            return redirect()->back()->withErrors(['Сервис временно недоступен, повторите запрос через ' . DeBruteService::IsGlobalBrutoforceAll("sms") . ' сек'])->withInput();
+        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
+
+            if (DeBruteService::IsGlobalBrutoforceAll()) {
+                return redirect()->back()->withErrors(['Сервис временно недоступен, повторите запрос через ' . DeBruteService::IsGlobalBrutoforceAll("sms") . ' сек'])->withInput();
+            }
+
+
+            if (DeBruteService::IsGlobalBrutoforce($phone)) {
+                return redirect()->back()->withErrors(['Аккаунт временно заблокирован, подождите ' . DeBruteService::IsGlobalBrutoforce($phone) . ' сек.'])->withInput();
+            }
+
+
+            if (DeBruteService::IsBrutoforce("sms")) {
+                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
+            }
+
         }
-
-
-        if (DeBruteService::IsGlobalBrutoforce($phone)) {
-            return redirect()->back()->withErrors(['Аккаунт временно заблокирован, подождите ' . DeBruteService::IsGlobalBrutoforce($phone) . ' сек.'])->withInput();
-        }
-
-
-        if (DeBruteService::IsBrutoforce("sms")) {
-            return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
-        }
-
 
         if (!config("authsms.AUTHSMS_AUTO_REGISTRATION", false)) {
 
 
-            if (DeBruteService::IsBrutoforceCustom("checkLogins", 10)) {
-                return redirect()->back()->withErrors(['Превышен лимит входа в разные аккаунты ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
+
+            if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
+                if (DeBruteService::IsBrutoforceCustom("checkLogins", 10)) {
+                    return redirect()->back()->withErrors(['Превышен лимит входа в разные аккаунты ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
+                }
             }
 
 
@@ -115,12 +121,15 @@ class LoginAuthSmsController extends BaseController
         $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip(), $code);
 
 
-        $antiBrutTime = 44;
-        if ($phonevertify->try_count > 2) {
-            if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
-                $phonevertify->try_count = 0;
-            } else {
-                return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
+
+        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
+            $antiBrutTime = 44;
+            if ($phonevertify->try_count > 2) {
+                if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
+                    $phonevertify->try_count = 0;
+                } else {
+                    return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
+                }
             }
         }
 
@@ -189,23 +198,27 @@ class LoginAuthSmsController extends BaseController
         }
 
 
-        if (DeBruteService::IsGlobalBrutoforceAll()) {
-            return redirect()->back()->withErrors(['Сервис временно недоступен, повторите запрос через ' . DeBruteService::IsGlobalBrutoforceAll() . ' сек'])->withInput();
-        }
+        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
+            if (DeBruteService::IsGlobalBrutoforceAll()) {
+                return redirect()->back()->withErrors(['Сервис временно недоступен, повторите запрос через ' . DeBruteService::IsGlobalBrutoforceAll() . ' сек'])->withInput();
+            }
 
-        if (DeBruteService::IsGlobalBrutoforce($phone)) {
-            return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsGlobalBrutoforce($phone) . ' сек.'])->withInput();
-        }
+            if (DeBruteService::IsGlobalBrutoforce($phone)) {
+                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsGlobalBrutoforce($phone) . ' сек.'])->withInput();
+            }
 
-        if (DeBruteService::IsBrutoforce("sms")) {
-            return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
+            if (DeBruteService::IsBrutoforce("sms")) {
+                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
+            }
         }
-
 
         if (!config("authsms.AUTHSMS_AUTO_REGISTRATION", false)) {
 
-            if (DeBruteService::IsBrutoforceCustom("checkLogins")) {
-                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
+
+            if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
+                if (DeBruteService::IsBrutoforceCustom("checkLogins")) {
+                    return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
+                }
             }
 
             if (!User::where("email", $phone)->exists()) {
@@ -218,14 +231,16 @@ class LoginAuthSmsController extends BaseController
         $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip(), $code);
 
 
-        $antiBrutTime = 44;
-        if ($phonevertify->try_count > 2) {
-            if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
-                $phonevertify->try_count = 0;
-            } else {
-                return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
-            }
+        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
+            $antiBrutTime = 44;
+            if ($phonevertify->try_count > 2) {
+                if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
+                    $phonevertify->try_count = 0;
+                } else {
+                    return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
+                }
 
+            }
         }
 
 

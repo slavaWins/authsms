@@ -55,8 +55,11 @@ class CodeController extends BaseController
 
         $data = $validator->validate();
 
-        if (DeBruteService::IsBrutoforce("sms")) {
-            return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
+
+        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
+            if (DeBruteService::IsBrutoforce("sms")) {
+                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
+            }
         }
 
         if ($phonevertify->ip <> $_SERVER['REMOTE_ADDR']) {
@@ -114,18 +117,21 @@ class CodeController extends BaseController
 
         $data = $validator->validate();
 
-        if(config("authsms.IsCheckIpEqCodeLogin")) {
-            if ($phonevertify->ip <> $request->ip()) {
-                return redirect()->back()->withErrors(['IP адреса с которых вы запросили код и ввели не совпадают'])->withInput();
+
+        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
+            if (config("authsms.IsCheckIpEqCodeLogin")) {
+                if ($phonevertify->ip <> $request->ip()) {
+                    return redirect()->back()->withErrors(['IP адреса с которых вы запросили код и ввели не совпадают'])->withInput();
+                }
             }
-        }
 
-        if (DeBruteService::IsBrutoforce("sms")) {
-            return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
-        }
+            if (DeBruteService::IsBrutoforce("sms")) {
+                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
+            }
 
-        if (DeBruteService::IsGlobalBrutoforce($phonevertify->phone)) {
-            return redirect()->back()->withErrors(['Этот аккаунт временно не доступен. Повторите вход через ' . DeBruteService::IsGlobalBrutoforce($phonevertify->phone) . ' сек.'])->withInput();
+            if (DeBruteService::IsGlobalBrutoforce($phonevertify->phone)) {
+                return redirect()->back()->withErrors(['Этот аккаунт временно не доступен. Повторите вход через ' . DeBruteService::IsGlobalBrutoforce($phonevertify->phone) . ' сек.'])->withInput();
+            }
         }
 
         usleep(rand(0, 2800 ));
