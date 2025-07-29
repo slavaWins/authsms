@@ -6,13 +6,12 @@ namespace SlavaWins\AuthSms\IntegrationTests;
 //use PHPUnit\Framework\TestCase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Testing\TestResponse;
 use SlavaWins\AuthSms\Models\PhoneVertify;
-use Illuminate\Support\Facades\RateLimiter;
 use Str;
 use Tests\TestCase;
 
-class AdvancedAttackAuthTest  extends TestCase
+class AdvancedAttackAuthTest extends TestCase
 {
     protected function setUp(): void
     {
@@ -22,8 +21,27 @@ class AdvancedAttackAuthTest  extends TestCase
         config(["authsms.AUTHSMS_AUTO_REGISTRATION" => true]);
     }
 
-    public function IsErrorResponse()
+    /**
+     * @param TestResponse $response
+     * @return null
+     */
+    public function IsErrorResponse($response = null)
     {
+        if ($response) {
+
+            if (!empty($response->getContent())) {
+                $j = $response->json();
+                if (isset($j["error"])) {
+                    return $j["error"];
+                }
+            }
+            if ($response->status() != 200) {
+                return "any error";
+            }
+            //dd($response->json());
+            //dd($response->status());
+        }
+
         if (!session()->has('errors')) return null;
         return session()->get('errors')->first();
     }
@@ -58,8 +76,8 @@ class AdvancedAttackAuthTest  extends TestCase
         // Имитируем множественные одновременные запросы
         $successCount = 0;
         for ($i = 0; $i < 5; $i++) {
-           $r = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1111"]);
-            if ($r->status() === 302 && !$this->IsErrorResponse()) {
+            $r = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1111"]);
+            if (!$this->IsErrorResponse($r)) {
                 $successCount++;
             }
         }
@@ -130,7 +148,7 @@ class AdvancedAttackAuthTest  extends TestCase
 
 
         $this->assertEquals(302, $result->status());
-        $this->assertStringContainsString("IP", $this->IsErrorResponse());
+        $this->assertStringContainsString("IP", $this->IsErrorResponse($result));
     }
 
     public function test_SessionFixationAttack()
@@ -179,8 +197,6 @@ class AdvancedAttackAuthTest  extends TestCase
     }
 
 
-
-
     public function test_SessionRidingAttack()
     {
         //Simulate a session riding attack where the attacker tries to take advantage of session fixation vulnerabilities.
@@ -202,8 +218,6 @@ class AdvancedAttackAuthTest  extends TestCase
 
 
     }
-
-
 
 
     public function test_CodeInferenceAttack()
@@ -234,7 +248,7 @@ class AdvancedAttackAuthTest  extends TestCase
 
         // Проверяем разброс времени выполнения
         $avgTime = array_sum($timings) / count($timings);
-        $maxDeviation = max(array_map(function($time) use ($avgTime) {
+        $maxDeviation = max(array_map(function ($time) use ($avgTime) {
             return abs($time - $avgTime);
         }, $timings));
 
@@ -244,7 +258,6 @@ class AdvancedAttackAuthTest  extends TestCase
             "Уязвимость: время проверки кода может раскрыть информацию о правильности"
         );
     }
-
 
 
 }

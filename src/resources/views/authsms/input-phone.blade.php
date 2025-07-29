@@ -4,6 +4,9 @@
         <b class="col-auto inpFont">{{$prefix}}</b>
     @endif
     <input placeholder="{{$placeholder??""}}"
+           @if($isDisabledAutoComplite ?? false)
+               autocomplete="off"
+           @endif
            class="form-control col inpNumberReal inpFont no-outline-input  " name="{{$ind}}" type="{{$type??"text"}}"
            value="{{ $value ?? old($ind) }}" required autocomplete="{{$ind}}" autofocus>
 

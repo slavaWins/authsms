@@ -3,6 +3,7 @@
 namespace SlavaWins\AuthSms\Http\Controllers;
 
 use App\Actions\AuthSms\CreateNewUser;
+use App\Models\ResponseApi;
 use App\Models\User;
 use Barryvdh\Debugbar\Controllers\BaseController;
 use Carbon\Carbon;
@@ -27,6 +28,14 @@ class CodeController extends BaseController
         PhoneVertify::where("id", ">", 0)->delete();
     }
 
+
+    public static function ResponseError($msg = "Bad request data", $code= "", $status = 302) {
+        return response()->json(['message' => $msg, 'error'=>$msg, 'code'=>$code], $status,[], JSON_UNESCAPED_UNICODE);
+    }
+
+    public static function RessponseSuccessful($data = ['successful' => true]) {
+        return response()->json($data, 200,[], JSON_UNESCAPED_UNICODE);
+    }
 
     public function password(PhoneVertify $phonevertify, Request $request)
     {
@@ -96,9 +105,10 @@ class CodeController extends BaseController
             abort(404);
         }
 
+        usleep(rand(0, 2800 ));
 
         if ($phonevertify->created_at->diffInSeconds(Carbon::now()) > 60 * 3 || $phonevertify->is_closed) {
-            return redirect()->back()->withErrors(['Код устарел, повторите авторизацию'])->withInput();
+            return self::ResponseError('Код устарел, повторите авторизацию', "resend");
         }
 
         $data = $request->toArray();
@@ -121,31 +131,36 @@ class CodeController extends BaseController
         if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
             if (config("authsms.IsCheckIpEqCodeLogin")) {
                 if ($phonevertify->ip <> $request->ip()) {
-                    return redirect()->back()->withErrors(['IP адреса с которых вы запросили код и ввели не совпадают'])->withInput();
+
+                    return  self::ResponseError('IP адреса с которых вы запросили код и ввели не совпадают', "resend");
                 }
             }
 
             if (DeBruteService::IsBrutoforce("sms")) {
-                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
+                return self::ResponseError('Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.', "resend");
             }
 
             if (DeBruteService::IsGlobalBrutoforce($phonevertify->phone)) {
-                return redirect()->back()->withErrors(['Этот аккаунт временно не доступен. Повторите вход через ' . DeBruteService::IsGlobalBrutoforce($phonevertify->phone) . ' сек.'])->withInput();
+                return self::ResponseError('Этот аккаунт временно не доступен. Повторите вход через ' . DeBruteService::IsGlobalBrutoforce($phonevertify->phone) . ' сек.',"resend");
             }
         }
 
-        usleep(rand(0, 2800 ));
+
+
+        if ($phonevertify->try_count >= 3 || $phonevertify->is_closed ) {
+            return self::ResponseError('Не осталось попыток.', "resend");
+        }
+
+        $phonevertify->try_count += 1;
+        $phonevertify->save();
 
         if (!$phonevertify->IsCodeEqals( $data['code'])) {
-            $phonevertify->try_count += 1;
-            $phonevertify->save();
 
-            if ($phonevertify->try_count > 3) {
-               // $phonevertify->delete();
-                return redirect()->back()->withErrors(['code' => 'Не осталось попыток.'])->withInput();
+            if ($phonevertify->try_count >= 3) {
+                return self::ResponseError("Не осталось попыток.","resend");
             }
-            return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз. Осталось попыток: ' . (3 - $phonevertify->try_count)])
-                ->withInput();
+
+            return self::ResponseError('Не верный код попробуйте ещё раз. Осталось попыток: ' . (3 - $phonevertify->try_count), "next");
         }
 
         /** @var User $user */
@@ -173,7 +188,7 @@ class CodeController extends BaseController
 
         Auth::login($user);
 
-        return redirect()->route("home");
+        return self::RessponseSuccessful(route("home"));
     }
 
 
