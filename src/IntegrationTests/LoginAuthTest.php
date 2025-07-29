@@ -57,7 +57,7 @@ class LoginAuthTest extends TestCase
 
 
         $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1112"]);
-        $this->assertEquals("Не верный код попробуйте ещё раз. Осталось попыток: 2", $this->IsErrorResponse());
+        $this->assertEquals("Не верный код попробуйте ещё раз", $this->IsErrorResponse());
         $this->assertEquals(302, $result->status());
 
         $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1111"]);
@@ -102,7 +102,7 @@ class LoginAuthTest extends TestCase
         $getLastCode = PhoneVertify::orderByDesc("id")->first();
 
         $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1112"]);
-        $this->assertEquals("Не верный код попробуйте ещё раз. Осталось попыток: 2", $this->IsErrorResponse());
+        $this->assertEquals("Не верный код попробуйте ещё раз", $this->IsErrorResponse());
         $this->assertEquals(302, $result->status());
 
 
@@ -111,6 +111,31 @@ class LoginAuthTest extends TestCase
         $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1111"]);
         $this->assertEquals("Код устарел, повторите авторизацию", $this->IsErrorResponse());
         $this->assertEquals(302, $result->status());
+
+    }
+
+    public function test_SinhleCodeBrute()
+    {
+        config(["authsms.AUTHSMS_USE_MAIL" => false]);
+
+
+        $result = $this->post("/auth", ['login' => "9999999862"]);
+        $this->assertEquals(200, $result->status());
+
+        $getLastCode = PhoneVertify::orderByDesc("id")->first();
+
+        for($i=1;$i<=2;$i++) {
+            $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1112"]);
+            $this->assertEquals("Не верный код попробуйте ещё раз", $this->IsErrorResponse());
+            $this->assertEquals(302, $result->status());
+        }
+
+
+        $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1111"]);
+        $this->assertEquals(302, $result->status());
+        $this->assertEquals("Не осталось попыток.", $this->IsErrorResponse());
+
+
 
     }
 
@@ -133,8 +158,11 @@ class LoginAuthTest extends TestCase
 
         config(["authsms.AUTHSMS_USE_MAIL" => true]);
         $user = User::whereNotNull("email")->first();
+        $user->email = "example@mail.ru";
+        $user->save();
         $result = $this->post("/auth-email", ['login' => $user->email]);
-        $this->assertEquals(200, $result->status());
+
+        $this->assertEquals(200, $result->status(), $result->getContent());
 
 
 
@@ -193,7 +221,7 @@ class LoginAuthTest extends TestCase
 
 
         $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1112"]);
-        $this->assertEquals("Не верный код попробуйте ещё раз. Осталось попыток: 2", $this->IsErrorResponse());
+        $this->assertEquals("Не верный код попробуйте ещё раз", $this->IsErrorResponse());
         $this->assertEquals(302, $result->status());
 
         $result = $this->post("/auth/code/" . $getLastCode->id, ['code' => "1111"]);

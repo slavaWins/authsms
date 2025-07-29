@@ -134,18 +134,21 @@ class CodeController extends BaseController
             }
         }
 
+
         usleep(rand(0, 2800 ));
 
-        if (!$phonevertify->IsCodeEqals( $data['code'])) {
-            $phonevertify->try_count += 1;
-            $phonevertify->save();
+        $phonevertify->try_count += 1;
+        $phonevertify->save();
 
-            if ($phonevertify->try_count > 3) {
-               // $phonevertify->delete();
-                return redirect()->back()->withErrors(['code' => 'Не осталось попыток.'])->withInput();
-            }
-            return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз. Осталось попыток: ' . (3 - $phonevertify->try_count)])
-                ->withInput();
+        if ($phonevertify->try_count >= 3 || $phonevertify->is_closed) {
+            return redirect()->back()->withErrors(['code' => 'Не осталось попыток.'])->withInput();
+        }
+
+
+        if (!$phonevertify->IsCodeEqals( $data['code'])) {
+
+            //return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз. Осталось попыток: ' . (3 - $phonevertify->try_count)])                ->withInput();
+            return redirect()->back()->withErrors(['code' => 'Не верный код попробуйте ещё раз'])                ->withInput();
         }
 
         /** @var User $user */

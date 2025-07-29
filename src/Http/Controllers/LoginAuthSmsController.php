@@ -122,14 +122,12 @@ class LoginAuthSmsController extends BaseController
 
 
 
-        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
-            $antiBrutTime = 44;
-            if ($phonevertify->try_count > 2) {
-                if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
-                    $phonevertify->try_count = 0;
-                } else {
-                    return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
-                }
+        $antiBrutTime = 44;
+        if ($phonevertify->try_count > 2) {
+            if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
+                $phonevertify->try_count = 0;
+            } else {
+                return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
             }
         }
 
