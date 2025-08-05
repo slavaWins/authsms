@@ -41,8 +41,7 @@
         </button>
 
         <p class="mt-2" style="font-size: 11px; line-height: 1em;">
-            Нажимая «Далее», вы принимаете пользовательское соглашение и соглашаетесь на обработку вашей персональной
-            информации на условиях <a target='_blank' href="{{route("privacy")}}">политики конфиденциальности</a>
+            @include('authsms::authsms.policy-small-text')
         </p>
 
     </form>
