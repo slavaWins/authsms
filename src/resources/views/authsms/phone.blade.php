@@ -55,6 +55,7 @@
                 var clipboardData = e.originalEvent.clipboardData || window.clipboardData;
                 var pastedText = clipboardData.getData('text');
                 var cleanedText = pastedText.replace(/^\+7/, '');
+                var cleanedText = pastedText.replace(/^\8/, '');
 
                 if (pastedText.length < 10) return;
 
@@ -73,11 +74,11 @@
 
 @section('content_auth')
 
-    <form method="POST" action="{{ route('auth.phone.send') }}" id="formMain">
+    <form method="POST" action="{{ route('auth.phone.send') }}" id="formMain" class="form_phone">
         @csrf
 
 
-        <p class="text-center mb-4" style=" font-size: 18px; ">
+        <p class="_labelText">
             Введите номер телефона
         </p>
 
@@ -94,16 +95,12 @@
         @endif
 
 
-        <p class="text-center isLoading mb-4" style=" font-size: 18px;  display: none;">
-         <span class="spinner _contentAttachSpiner spinner-border" style="width: 1.4rem; height: 1.4rem; "
-               role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </span>
-
+        <p class=" isLoading " style=" display: none;">
+            @include('authsms::authsms.spiner')
         </p>
 
 
-        <p class="mt-3" style="font-size: 11px; line-height: 1em;">
+        <p class="_labelPrivPol" >
             @include('authsms::authsms.policy-small-text')
         </p>
 

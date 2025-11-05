@@ -35,11 +35,11 @@
 
 @section('content_auth')
 
-    <form method="POST" action="{{ route('auth.email.send') }}" id="formMain">
+    <form method="POST" action="{{ route('auth.email.send') }}" id="formMain" class="form_email">
         @csrf
 
 
-        <p class="text-center mb-4 info_header" style=" font-size: 18px; ">
+        <p class="_labelText">
             Введите почту
         </p>
 
@@ -47,15 +47,13 @@
 
         @include('authsms::authsms.error-render')
 
-        <p class="text-center isLoading mb-4" style=" font-size: 18px;  display: none;">
-         <span class="spinner _contentAttachSpiner spinner-border" style="width: 1.4rem; height: 1.4rem; "
-               role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </span>
 
+        <p class=" isLoading " style=" display: none;">
+            @include('authsms::authsms.spiner')
         </p>
 
-        <button type="submit" class="mt-4 btn btn-primary col-12 p-3 shadow-0 btn-submit-auth">
+
+        <button type="submit" class="btn btn-primary btnSubmitLogin btn-submit-auth">
             Отправить
         </button>
 
@@ -63,9 +61,14 @@
             @include('services.socialite.auth')
         @endif
 
-        <p class="mt-3" style="font-size: 11px; line-height: 1em;">
+
+
+
+
+        <p class="_labelPrivPol" >
             @include('authsms::authsms.policy-small-text')
         </p>
+
 
     </form>
 

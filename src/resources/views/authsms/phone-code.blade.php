@@ -23,32 +23,30 @@
 @section('content_auth')
 
 
-    <form method="POST" action="{{ route('auth.code.send', $phonevertify) }}" id="formMain">
+    <form method="POST" action="{{ route('auth.code.send', $phonevertify) }}" id="formMain" class="form_code">
         @csrf
 
 
-        <p class="text-center mb-0" style=" font-size: 18px; ">
+        <p class="_labelText">
             Введите код
         </p>
-        <div class="mb-2 text-center small ">
-            Отправленный на: <BR> {{$phone_draw}}
-        </div>
+        <p class="_labelSendTo">
+            Отправленный на: <BR> <span>{{$phone_draw}}</span>
+        </p>
 
         @include('authsms::authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXX'])
 
         @include('authsms::authsms.error-render')
 
 
-        <p class="text-center isLoading mb-4" style=" font-size: 18px; color:#000; display: none;">
-         <span class="spinner _contentAttachSpiner spinner-border" style="width: 1.4rem; height: 1.4rem; "
-               role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </span>
 
+
+        <p class=" isLoading " style=" display: none;">
+            @include('authsms::authsms.spiner')
         </p>
 
 
-        <p class="mt-2" style="font-size: 11px; line-height: 1em;">
+        <p class="_labelPrivPol" >
             @include('authsms::authsms.policy-small-text')
         </p>
 
