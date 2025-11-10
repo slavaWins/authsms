@@ -69,7 +69,7 @@ class LoginAuthSmsController extends BaseController
         $phone = config("authsms.PreappenPhoneCode", "") . $phone;
 
         if (!$this->validatePhoneNumber($phone)) {
-            return redirect()->back()->withErrors(['Не корректный номер телефона'])->withInput();
+            return redirect()->back()->withErrors(['Некорректный номер телефона'])->withInput();
         }
 
         if (config("authsms.AUTHSMS_USE_MAIL", false)) {

@@ -184,7 +184,7 @@ class LoginAuthTest extends TestCase
         ];
         foreach ($phonesBad as $value) {
             $result = $this->post("/auth", ['login' => $value]);
-            $this->assertEquals("Не корректный номер телефона", $this->IsErrorResponse(), "Номер телефона " . $value);
+            $this->assertEquals("Некорректный номер телефона", $this->IsErrorResponse(), "Номер телефона " . $value);
         }
 
     }
