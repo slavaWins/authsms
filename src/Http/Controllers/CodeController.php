@@ -4,7 +4,7 @@ namespace SlavaWins\AuthSms\Http\Controllers;
 
 use App\Actions\AuthSms\CreateNewUser;
 use App\Models\User;
-use Barryvdh\Debugbar\Controllers\BaseController;
+use Illuminate\Routing\Controller as BaseController;
 use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
