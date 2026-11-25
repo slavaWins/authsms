@@ -30,9 +30,11 @@ class AuthSmsServiceProvider extends ServiceProvider
             __DIR__.'/../resources/js' => public_path('js/authsms'),
         ], 'public');
 
-        $this->publishes([
-            __DIR__.'/../../img' => public_path('img/authsms'),
-        ], 'public');
+        if (file_exists(__DIR__.'/../../img')) {
+            $this->publishes([
+                __DIR__.'/../../img' => public_path('img/authsms'),
+            ], 'public');
+        }
 
         $this->publishes([
             __DIR__.'/../database/migrations' =>  database_path('migrations'),

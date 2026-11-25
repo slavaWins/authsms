@@ -105,36 +105,6 @@ class DeBruteAuthTest extends TestCase
         $this->assertEquals(200, $result->status());
     }
 
-
-    public function test_GlobalBruteForAll()
-    {
-        $this->RandomizeIp();
-
-
-        $phone = "9999999861";
-        Cache::flush();
-
-
-        $result = $this->post("/auth", ['login' => $phone]);
-        $this->assertEquals(200, $result->status());
-
-
-        for ($i = 0; $i <= 40; $i++) {
-            $this->RandomizeIp();
-
-            $phone = "999999" . rand(1111, 9999);
-            $this->post("/auth", ['login' => $phone]);
-        }
-
-        $this->RandomizeIp();
-        $result = $this->post("/auth", ['login' => $phone]);
-        $this->assertEquals(302, $result->status());
-        $this->assertStringContainsString("Сервис временно недоступен, повторите запрос через", $this->IsErrorResponse());
-
-
-        RateLimiter::clear("globalbrute___all");
-        $result = $this->post("/auth", ['login' => $phone]);
-        $this->assertEquals(200, $result->status());
-    }
+    // test_GlobalBruteForAll удалён: общий лимит на весь сайт убран (DoS-вектор), IsGlobalBrutoforceAll() всегда false
 
 }

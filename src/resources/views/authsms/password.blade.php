@@ -4,12 +4,9 @@
 @section('scripts')
     <script>
         $(document).ready(function () {
-        $('.inp_code>input').mask('AAAAAA');
-
-        AuthSms.CallByInputLen($('.inp_code>input'), 6, function () {
-           $('#formMain').submit();
-        });
-
+            @if($needCode ?? $isRegister)
+            $('.inp_code>input').mask('0000');
+            @endif
         });
     </script>
 @endsection
@@ -29,10 +26,16 @@
         </p>
 
         @if($isRegister)
-            <p  class="mb-1 small text-center">Придумайте 6 значный пароль, для регистрации в сервисе.</p>
+            <p class="mb-1 small text-center">
+                Мы отправили код на <span>{{$phone_draw}}</span>.<BR>
+                Введите его и придумайте пароль (от 8 символов).
+            </p>
+
+            @include('authsms::authsms.input-phone', ['ind'=>'code','placeholder'=>'Код XXXX', 'type'=>'text'])
+            <div class="mt-2"></div>
         @endif
 
-        @include('authsms::authsms.input-phone', ['ind'=>'code','placeholder'=>'XXXXХХ', 'type'=>'text'])
+        @include('authsms::authsms.input-phone', ['ind'=>'password','placeholder'=>'Пароль', 'type'=>'password', 'value'=>''])
 
         @include('authsms::authsms.error-render')
 

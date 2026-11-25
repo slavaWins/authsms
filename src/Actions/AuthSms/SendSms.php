@@ -25,7 +25,10 @@
 
             $url = "https://sms.ru/sms/send?".http_build_query($data);
 
-            $body = file_get_contents($url) ?? "error";
+            // Таймаут, чтобы зависший sms.ru не держал воркер PHP. Ключ в URL — так требует API sms.ru, не логируем URL.
+            $ctx = stream_context_create(['http' => ['timeout' => 10], 'https' => ['timeout' => 10]]);
+            $body = @file_get_contents($url, false, $ctx);
+            if ($body === false) $body = "error";
             Log::info($body);
 
             if(substr_count($body, 'status": "OK')) return true;

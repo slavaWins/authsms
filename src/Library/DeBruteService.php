@@ -10,106 +10,63 @@ class DeBruteService
 {
 
     /**
-     * ��������� �� ���� � ����� ip
-     * @param $ind
-     * @param string $ip ���� �� �������, �� ����� REMOTE_ADDR �������
-     * @return bool
+     * Лимит попыток с одного IP.
+     * @param string $ind    ключ действия ("sms", "checkLogins", ...)
+     * @param string|null $ip если не указан — request()->ip()
+     * @return int|false     сколько секунд ждать, или false если лимит не превышен
      */
     public static function IsBrutoforce($ind, $ip = null)
     {
-
-
         if ($ip == null) $ip = request()->ip();
 
-        if (config("authsms.AttemptsMaxByIp") > 0) {
+        $max = (int)config("authsms.AttemptsMaxByIp");
+        if ($max <= 0) return false;
 
-            $limitKey = $ind . '__' . $ip;
-
-            if (RateLimiter::tooManyAttempts($limitKey, config("authsms.AttemptsMaxByIp"))) {
-                $seconds = RateLimiter::availableIn($limitKey);
-
-                return $seconds;
-            }
-
-            RateLimiter::hit($limitKey, config("authsms.WaitInSecondsIsBrut", 6000));
-        }
-
-
-        return false;
+        return self::Hit($ind . '__' . $ip, $max, (int)config("authsms.WaitInSecondsIsBrut", 60 * 16));
     }
 
-    public static function IsBrutoforceCustom($ind, $tryCount=5, $waitTime=6000)
+    /**
+     * Произвольный лимит по IP
+     * @return int|false
+     */
+    public static function IsBrutoforceCustom($ind, $tryCount = 5, $waitTime = 6000)
     {
-
-
-        $ip = request()->ip();
-
-
-            $limitKey = $ind . '__' . $ip;
-
-            if (RateLimiter::tooManyAttempts($limitKey, $tryCount)) {
-                $seconds = RateLimiter::availableIn($limitKey);
-
-                return $seconds;
-            }
-
-            RateLimiter::hit($limitKey, $waitTime);
-
-
-
-        return false;
+        return self::Hit($ind . '__' . request()->ip(), (int)$tryCount, (int)$waitTime);
     }
 
 
     /**
-     *
-     * @param $login
-     * @return bool
+     * Лимит на конкретный логин (телефон/email) со всех IP.
+     * Защищает от перебора через пул прокси; побочный эффект — аккаунт можно временно «заморозить» (осознанный выбор).
+     * @return int|false
      */
     public static function IsGlobalBrutoforce($login)
     {
+        $max = (int)config("authsms.GlobalBrutoforcePerLogin");
+        if ($max <= 0) return false;
 
-
-        if (config("authsms.GlobalBrutoforcePerLogin") > 0) {
-
-            $limitKey = "globalbrute__" . $login;
-
-            if (RateLimiter::tooManyAttempts($limitKey, config("authsms.GlobalBrutoforcePerLogin"))) {
-                $seconds = RateLimiter::availableIn($limitKey);
-
-                return $seconds;
-            }
-
-            RateLimiter::hit($limitKey, 60 * 15);
-        }
-
-
-        return false;
+        return self::Hit("globalbrute__" . mb_strtolower((string)$login), $max, 60 * 15);
     }
 
     /**
-     *
-     * @param $login
-     * @return bool
+     * @deprecated Общий лимит на весь сайт убран: любой мог одним скриптом закрыть вход всем. Всегда false.
      */
     public static function IsGlobalBrutoforceAll()
     {
+        return false;
+    }
 
 
-        if (config("authsms.GlobalBrutoforceForAll") > 0) {
-
-            $limitKey = "globalbrute___all";
-
-            if (RateLimiter::tooManyAttempts($limitKey, config("authsms.GlobalBrutoforceForAll"))) {
-                $seconds = RateLimiter::availableIn($limitKey);
-
-                return $seconds;
-            }
-
-            RateLimiter::hit($limitKey, 60 * 15);
+    /**
+     * @return int|false
+     */
+    private static function Hit(string $limitKey, int $max, int $decaySeconds)
+    {
+        if (RateLimiter::tooManyAttempts($limitKey, $max)) {
+            return max(1, RateLimiter::availableIn($limitKey));
         }
 
-
+        RateLimiter::hit($limitKey, $decaySeconds);
         return false;
     }
 

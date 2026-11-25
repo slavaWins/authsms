@@ -5,13 +5,14 @@ namespace SlavaWins\AuthSms\Http\Controllers;
 use App\Actions\AuthSms\SendSms;
 use App\Models\User;
 use Illuminate\Routing\Controller as BaseController;
-use Carbon\Carbon;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use libphonenumber\PhoneNumberUtil;
+use SlavaWins\AuthSms\Library\AuthSmsConfig;
 use SlavaWins\AuthSms\Library\DeBruteService;
 use SlavaWins\AuthSms\Library\Formater;
 use SlavaWins\AuthSms\Library\SendEmail;
@@ -33,26 +34,24 @@ class LoginAuthSmsController extends BaseController
         }
     }
 
+    private static function InputLogin(Request $request): string
+    {
+        $login = $request->input('login');
+        return is_string($login) ? $login : '';
+    }
+
     public function phone(Request $request)
     {
-        if (config("authsms.AUTHSMS_USE_MAIL")) {
+        if (AuthSmsConfig::UseMail()) {
             abort(404);
         }
 
-
-        $data = $request->toArray();
-
-        $data['phone'] = $data['login'] ?? "";
-        $data['phone'] = str_replace(' ', '', $data['phone']);
-        $data['phone'] = str_replace('(', '', $data['phone']);
-        $data['phone'] = str_replace(')', '', $data['phone']);
-        $data['phone'] = str_replace('-', '', $data['phone']);
-
+        $data = ['phone' => str_replace([' ', '(', ')', '-'], '', self::InputLogin($request))];
 
         $validator = Validator::make(
             $data,
             [
-                'phone' => 'required|string|min:10|max:10|regex:/^\d+(\.\d{1,2})?$/',
+                'phone' => 'required|string|min:10|max:10|regex:/^\d{10}$/',
             ],
             [
             ],
@@ -61,114 +60,26 @@ class LoginAuthSmsController extends BaseController
             ]
         );
 
-
         $data = $validator->validate();
 
         $phone_draw = Formater::formatPhoneNumber("7" . $data['phone']);
-        $phone = $data['phone'];
-        $phone = config("authsms.PreappenPhoneCode", "") . $phone;
+        $phone = config("authsms.PreappenPhoneCode", "") . $data['phone'];
 
         if (!$this->validatePhoneNumber($phone)) {
             return redirect()->back()->withErrors(['Некорректный номер телефона'])->withInput();
         }
 
-        if (config("authsms.AUTHSMS_USE_MAIL", false)) {
-            return redirect()->back()->withErrors(['Не поддерживаемый способ авторизации'])->withInput();
-        }
-
-        if (env('AUTHSMS_USE_ONLY_PHONE', false)) {
-            if ($phone <> env('AUTHSMS_USE_ONLY_PHONE', false)) {
-                return redirect()->back()->withErrors(['Сайт находится в разработке, и система авторизации отключена. Извините.'])->withInput();
-            }
-        }
-
-
-        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
-
-            if (DeBruteService::IsGlobalBrutoforceAll()) {
-                return redirect()->back()->withErrors(['Сервис временно недоступен, повторите запрос через ' . DeBruteService::IsGlobalBrutoforceAll("sms") . ' сек'])->withInput();
-            }
-
-
-            if (DeBruteService::IsGlobalBrutoforce($phone)) {
-                return redirect()->back()->withErrors(['Аккаунт временно заблокирован, подождите ' . DeBruteService::IsGlobalBrutoforce($phone) . ' сек.'])->withInput();
-            }
-
-
-            if (DeBruteService::IsBrutoforce("sms")) {
-                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
-            }
-
-        }
-
-        if (!config("authsms.AUTHSMS_AUTO_REGISTRATION", false)) {
-
-
-
-            if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
-                if (DeBruteService::IsBrutoforceCustom("checkLogins", 10)) {
-                    return redirect()->back()->withErrors(['Превышен лимит входа в разные аккаунты ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
-                }
-            }
-
-
-            if (!User::where("phone", $phone)->exists()) {
-                return redirect()->back()->withErrors(['Не найден аккаунт'])->withInput();
-            }
-        }
-
-        $code = PhoneVertify::GetRandomCode();
-        $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip(), $code);
-
-
-
-        $antiBrutTime = 44;
-        if ($phonevertify->try_count > 2) {
-            if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
-                $phonevertify->try_count = 0;
-            } else {
-                return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
-            }
-        }
-
-
-
-        if (config('authsms.AUTHSMS_TEST_MODE', false)) {
-            $phonevertify->SetCode("1111");
-        } else {
-            SendSms::send($phone, SendSms::messageAuth($code));
-        }
-
-        $phonevertify->save();
-
-        $tryId = $phonevertify->id;
-
-        $isRegister = User::where("phone", $phone)->first() == null;
-
-
-        $compact = compact(['phone_draw', 'phone', 'tryId', 'phonevertify', 'isRegister']);
-
-        if (env('AUTHSMS_USE_ONLY_PASSWORD', false)) {
-            return view("authsms::authsms.password", $compact);
-        } else {
-            return view("authsms::authsms.phone-code", $compact);
-        }
-
+        return $this->StartAuth($request, $phone, $phone_draw, 10);
     }
 
 
     public function email(Request $request)
     {
-
-        if (!config("authsms.AUTHSMS_USE_MAIL")) {
+        if (!AuthSmsConfig::UseMail()) {
             abort(404);
         }
 
-        $data = $request->toArray();
-
-        $data['email'] = $data['login'] ?? "";
-        $data['email'] = str_replace(' ', '', $data['email']);
-
+        $data = ['email' => mb_strtolower(str_replace(' ', '', self::InputLogin($request)))];
 
         $validator = Validator::make(
             $data,
@@ -182,97 +93,96 @@ class LoginAuthSmsController extends BaseController
             ]
         );
 
-
         $data = $validator->validate();
 
-        $phone_draw = $data['email'];
-        $phone = $data['email'];
+        return $this->StartAuth($request, $data['email'], $data['email'], 5);
+    }
 
 
-        if (env('AUTHSMS_USE_ONLY_PHONE', false)) {
-            if ($phone <> env('AUTHSMS_USE_ONLY_PHONE', false)) {
-                return redirect()->back()->withErrors(['Сайт находится в разработке, и система авторизации отключена. Извините.'])->withInput();
+    /**
+     * Общая часть для телефона и почты: лимиты, проверка аккаунта, создание попытки и отправка кода.
+     */
+    private function StartAuth(Request $request, string $login, string $phone_draw, int $checkLoginsLimit)
+    {
+        $isMail = AuthSmsConfig::UseMail();
+        $field = AuthSmsConfig::LoginField();
+
+        $onlyLogin = AuthSmsConfig::OnlyLogin();
+        if ($onlyLogin !== null && mb_strtolower($login) !== $onlyLogin) {
+            return redirect()->back()->withErrors(['Сайт находится в разработке, и система авторизации отключена. Извините.'])->withInput();
+        }
+
+        $limitsOn = !AuthSmsConfig::IsLimitsDisabled();
+
+        if ($limitsOn) {
+            if ($sec = DeBruteService::IsGlobalBrutoforce($login)) {
+                return redirect()->back()->withErrors(['Аккаунт временно заблокирован, подождите ' . $sec . ' сек.'])->withInput();
+            }
+
+            if ($sec = DeBruteService::IsBrutoforce("sms")) {
+                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . $sec . ' сек.'])->withInput();
             }
         }
 
-
-        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
-            if (DeBruteService::IsGlobalBrutoforceAll()) {
-                return redirect()->back()->withErrors(['Сервис временно недоступен, повторите запрос через ' . DeBruteService::IsGlobalBrutoforceAll() . ' сек'])->withInput();
-            }
-
-            if (DeBruteService::IsGlobalBrutoforce($phone)) {
-                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsGlobalBrutoforce($phone) . ' сек.'])->withInput();
-            }
-
-            if (DeBruteService::IsBrutoforce("sms")) {
-                return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforce("sms") . ' сек.'])->withInput();
-            }
-        }
-
-        if (!config("authsms.AUTHSMS_AUTO_REGISTRATION", false)) {
-
-
-            if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
-                if (DeBruteService::IsBrutoforceCustom("checkLogins")) {
-                    return redirect()->back()->withErrors(['Превышено общие число попыток, подождите ' . DeBruteService::IsBrutoforceCustom("checkLogins") . ' сек.'])->withInput();
+        if (!AuthSmsConfig::AutoRegistration()) {
+            if ($limitsOn) {
+                if ($sec = DeBruteService::IsBrutoforceCustom("checkLogins", $checkLoginsLimit)) {
+                    return redirect()->back()->withErrors(['Превышен лимит входа в разные аккаунты, подождите ' . $sec . ' сек.'])->withInput();
                 }
             }
 
-            if (!User::where("email", $phone)->exists()) {
+            if (!User::where($field, $login)->exists()) {
                 return redirect()->back()->withErrors(['Не найден аккаунт'])->withInput();
             }
         }
 
+        /** @var User|null $user */
+        $user = User::where($field, $login)->first();
 
-        $code = PhoneVertify::GetRandomCode();
-        $phonevertify = PhoneVertify::MakeTryByPhone($phone, $request->ip(), $code);
+        $passwordMode = AuthSmsConfig::UsePasswordOnly();
 
+        // Регистрация (или у пользователя ещё нет пароля) — логин нужно подтвердить кодом.
+        $isRegister = !$user || ($passwordMode && empty($user->password));
 
-        if (config("authsms.AUTHSMS_LIMIT_DISABLED_QA", false)==false) {
-            $antiBrutTime = 44;
-            if ($phonevertify->try_count > 2) {
-                if (Carbon::now()->diffInSeconds($phonevertify->last_try) > $antiBrutTime) {
-                    $phonevertify->try_count = 0;
-                } else {
-                    return redirect()->back()->withErrors(['Превышено число попыток, подождите ' . ($antiBrutTime - Carbon::now()->diffInSeconds($phonevertify->last_try)) . ' сек.'])->withInput();
-                }
+        // В режиме пароля код отправляем только при регистрации — обычный вход идёт по паролю
+        $needCode = !$passwordMode || $isRegister;
 
+        $code = AuthSmsConfig::IsTestMode() ? "1111" : PhoneVertify::GetRandomCode();
+        $phonevertify = PhoneVertify::MakeTryByPhone($login, $request->ip(), $code);
+
+        if ($needCode && !AuthSmsConfig::IsTestMode()) {
+            try {
+                $sended = $isMail
+                    ? SendEmail::send($login, $code)
+                    : SendSms::send($login, SendSms::messageAuth($code));
+            } catch (\Throwable $e) {
+                Log::error('authsms: ошибка отправки кода: ' . $e->getMessage());
+                $sended = false;
             }
+            $phonevertify->is_sended_on_phone = (bool)$sended;
+            $phonevertify->save();
         }
 
-
-        if (config('authsms.AUTHSMS_TEST_MODE',false)) {
-            $phonevertify->SetCode("1111");
-        } else {
-            SendEmail::send($phone, $code);
-        }
-
-        $phonevertify->save();
-
+        $phone = $login;
         $tryId = $phonevertify->id;
 
-        $isRegister = User::where("phone", $phone)->first() == null;
+        $compact = compact(['phone_draw', 'phone', 'tryId', 'phonevertify', 'isRegister', 'needCode']);
 
-
-        $compact = compact(['phone_draw', 'phone', 'tryId', 'phonevertify', 'isRegister']);
-
-        if (env('AUTHSMS_USE_ONLY_PASSWORD', false)) {
+        if ($passwordMode) {
             return view("authsms::authsms.password", $compact);
-        } else {
-            return view("authsms::authsms.phone-code", $compact);
         }
 
+        return view("authsms::authsms.phone-code", $compact);
     }
 
 
     public function index()
     {
-        if (env("AUTHSMS_USE_MAIL")) {
+        if (AuthSmsConfig::UseMail()) {
             return view("authsms::authsms.email");
-        } else {
-            return view("authsms::authsms.phone");
         }
+
+        return view("authsms::authsms.phone");
     }
 
 }
